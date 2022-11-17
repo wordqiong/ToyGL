@@ -3,7 +3,7 @@
 
 
 ```bash
-git clone https://github.com/wordqiong/OpenGL_shader.git
+git clone https://github.com/wordqiong/ToyGL.git
 cd Glitter
 ```
 
@@ -26,8 +26,3 @@ note：cmake -G "Visual Studio 17" .. depends on your visual studio version，I 
 and when you successfully init it，you also need to set glitter as start program （启动项目）
 
 
-## perform
-你可以看到点光源，聚光灯，还有3D模型的展示和天空盒纹理贴图
-![image](readme_graph/point_light.png)
-![image](readme_graph/SpotLight.png)
-![image](readme_graph/3D.png)
