@@ -1,19 +1,17 @@
-#ifndef MODEL_H
+ï»¿#ifndef MODEL_H
 #define MODEL_H
 
 #include <glad/glad.h> 
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
+
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
 #include <mesh.h>
 #include <shader.h>
-
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -28,21 +26,21 @@ class Model
 {
 public:
     // model data 
-    //ËùÓĞ¼ÓÔØ¹ıµÄÎÆÀí vector 
+    //æ‰€æœ‰åŠ è½½è¿‡çš„çº¹ç† vector 
     vector<Texture> textures_loaded;	// stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
-    //Ä£ĞÍÊı¾İ  
+    //æ¨¡å‹æ•°æ®  
     vector<Mesh>    meshes;
     string directory;
 
     bool gammaCorrection;
 
-    // ¹¹Ôìº¯Êı£¬¸øËüÒ»¸öÂ·¾¶£¬ÈÃËûÓÃload modelÀ´¼ÓÔØÎÄ¼ş
+    // æ„é€ å‡½æ•°ï¼Œç»™å®ƒä¸€ä¸ªè·¯å¾„ï¼Œè®©ä»–ç”¨load modelæ¥åŠ è½½æ–‡ä»¶
     Model(string const& path, bool gamma = false) : gammaCorrection(gamma)
     {
         loadModel(path);
     }
 
-    // ±éÀúËùÓĞÍøÂç£¬µ÷ÓÃ¸÷×ÔµÄdrawº¯Êı£¬Íê³ÉÄ£ĞÍ»æÖÆ
+    // éå†æ‰€æœ‰ç½‘ç»œï¼Œè°ƒç”¨å„è‡ªçš„drawå‡½æ•°ï¼Œå®Œæˆæ¨¡å‹ç»˜åˆ¶
     void Draw(Shader& shader)
     {
         for (unsigned int i = 0; i < meshes.size(); i++)
@@ -50,15 +48,15 @@ public:
     }
 
 private:
-    // loadModel Ê¹ÓÃassimp¼ÓÔØÄ£ĞÍ 
+    // loadModel ä½¿ç”¨assimpåŠ è½½æ¨¡å‹ 
     void loadModel(string const& path)
     {
-        //ÔÚAssimpµÄÃüÃû¿Õ¼äÀï ÓÃ¸öimporter µ÷ÓÃread fileº¯Êı
+        //åœ¨Assimpçš„å‘½åç©ºé—´é‡Œ ç”¨ä¸ªimporter è°ƒç”¨read fileå‡½æ•°
         Assimp::Importer importer;
-        //µÚ¶ş¸ö²ÎÊıÊÇÒ»¸öºóÆÚ´¦ÀíµÄÑ¡Ïî 
-        //aiProcess_Triangulate Èç¹ûÄ£ĞÍ²»ÊÇÈ«²¿ÓÉÈı½ÇĞĞ×é³É£¬½«ËùÓĞÍ¼ÔªĞÎ×´±äÎªÈı½ÇĞÎ
-        //aiProcess_FlipUVs ·­×ªyÖáµÄÎÆÀí×ø±ê 
-        //aiProcess_GenSmoothNormals Èç¹ûÃ»ÓĞ·¨ÏòÁ¿£¬¸øÃ¿¸ö¶¥µã´´½¨·¨Ïß
+        //ç¬¬äºŒä¸ªå‚æ•°æ˜¯ä¸€ä¸ªåæœŸå¤„ç†çš„é€‰é¡¹ 
+        //aiProcess_Triangulate å¦‚æœæ¨¡å‹ä¸æ˜¯å…¨éƒ¨ç”±ä¸‰è§’è¡Œç»„æˆï¼Œå°†æ‰€æœ‰å›¾å…ƒå½¢çŠ¶å˜ä¸ºä¸‰è§’å½¢
+        //aiProcess_FlipUVs ç¿»è½¬yè½´çš„çº¹ç†åæ ‡ 
+        //aiProcess_GenSmoothNormals å¦‚æœæ²¡æœ‰æ³•å‘é‡ï¼Œç»™æ¯ä¸ªé¡¶ç‚¹åˆ›å»ºæ³•çº¿
         //aiProcess_SplitLargeMeshes
         //aiProcess_OptimizeMeshes
         const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
@@ -72,28 +70,28 @@ private:
         directory = path.substr(0, path.find_last_of('/'));
 
         // process ASSIMP's root node recursively
-        //Ã¿¸ö½Úµã¿ÉÄÜ°üº¬¶à¸ö×Ó½Úµã£¬ËùÒÔ ÏÈ´¦Àí²ÎÊıÖĞµÄ½Úµã ÔÙ´¦ÀíËùÓĞµÄ×Ó½Úµã 
-        //·ûºÏµİ¹é½á¹¹
+        //æ¯ä¸ªèŠ‚ç‚¹å¯èƒ½åŒ…å«å¤šä¸ªå­èŠ‚ç‚¹ï¼Œæ‰€ä»¥ å…ˆå¤„ç†å‚æ•°ä¸­çš„èŠ‚ç‚¹ å†å¤„ç†æ‰€æœ‰çš„å­èŠ‚ç‚¹ 
+        //ç¬¦åˆé€’å½’ç»“æ„
         processNode(scene->mRootNode, scene);
     }
 
-    //assimp½á¹¹£¬Ã¿¸ö½Úµã°üº¬ÁËÒ»ÏµÁĞµÄÍø¸ñË÷Òı Ã¿¸öË÷ÒıÖ¸Ïò³¡¾°¶ÔÏóµÄÌØ¶¨ÍøÂç
+    //assimpç»“æ„ï¼Œæ¯ä¸ªèŠ‚ç‚¹åŒ…å«äº†ä¸€ç³»åˆ—çš„ç½‘æ ¼ç´¢å¼• æ¯ä¸ªç´¢å¼•æŒ‡å‘åœºæ™¯å¯¹è±¡çš„ç‰¹å®šç½‘ç»œ
     // processes a node in a recursive fashion. Processes each individual mesh located at the node and repeats this process on its children nodes (if any).
     void processNode(aiNode* node, const aiScene* scene)
     {
         // process each mesh located at the current node
-        //´¦ÀíËùÓĞµÄÍøÂç
+        //å¤„ç†æ‰€æœ‰çš„ç½‘ç»œ
         for (unsigned int i = 0; i < node->mNumMeshes; i++)
         {
             // the node object only contains indices to index the actual objects in the scene. 
             // the scene contains all the data, node is just to keep stuff organized (like relations between nodes).
-           //ÏÈ½¨Á¢Ò»¸öÍø¸ñË÷Òı 
+           //å…ˆå»ºç«‹ä¸€ä¸ªç½‘æ ¼ç´¢å¼• 
             aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-            //Ë÷Òı³¡¾°ÖĞµÄmMeshes µÃµ½¶ÔÓ¦µÄÍøÂç  
-            //·µ»ØµÄÍø¸ñ ¸øÁË process mesh  ·µ»ØÒ»¸ömesh¶ÔÏó£¬´æÔÚmeshesÁĞ±íÀï
+            //ç´¢å¼•åœºæ™¯ä¸­çš„mMeshes å¾—åˆ°å¯¹åº”çš„ç½‘ç»œ  
+            //è¿”å›çš„ç½‘æ ¼ ç»™äº† process mesh  è¿”å›ä¸€ä¸ªmeshå¯¹è±¡ï¼Œå­˜åœ¨meshesåˆ—è¡¨é‡Œ
             meshes.push_back(processMesh(mesh, scene));
         }
-        //È»ºó¿´¿´¶ù×Ó
+        //ç„¶åçœ‹çœ‹å„¿å­
         // after we've processed all of the meshes (if any) we then recursively process each of the children nodes
         for (unsigned int i = 0; i < node->mNumChildren; i++)
         {
@@ -113,7 +111,7 @@ private:
         for (unsigned int i = 0; i < mesh->mNumVertices; i++)
         {
             Vertex vertex;
-            //´¦Àí¶¥µãÎ»ÖÃ ·¨Ïß ÎÆÀí×ø±ê
+            //å¤„ç†é¡¶ç‚¹ä½ç½® æ³•çº¿ çº¹ç†åæ ‡
             glm::vec3 vector; // we declare a placeholder vector since assimp uses its own vector class that doesn't directly convert to glm's vec3 class so we transfer the data to this placeholder glm::vec3 first.
             // positions
             vector.x = mesh->mVertices[i].x;
@@ -153,20 +151,20 @@ private:
 
             vertices.push_back(vertex);
         }
-        //´¦ÀíË÷Òı Ã¿¸öÍø¸ñ ¶¼ÓĞÃæ Êı×é £¬Ã¿¸öÃæ´ú±íÒ»¸öÍ¼Ôª
-        // //Ò»¸öÃæÓĞ¶à¸öË÷Òı ÄÇÃ´Ó¦¸Ã°´Ê²Ã´Ë³Ğò»æÖÆÄÄ¸ö¶¥µã
+        //å¤„ç†ç´¢å¼• æ¯ä¸ªç½‘æ ¼ éƒ½æœ‰é¢ æ•°ç»„ ï¼Œæ¯ä¸ªé¢ä»£è¡¨ä¸€ä¸ªå›¾å…ƒ
+        // //ä¸€ä¸ªé¢æœ‰å¤šä¸ªç´¢å¼• é‚£ä¹ˆåº”è¯¥æŒ‰ä»€ä¹ˆé¡ºåºç»˜åˆ¶å“ªä¸ªé¡¶ç‚¹
         // now wak through each of the mesh's faces (a face is a mesh its triangle) and retrieve the corresponding vertex indices.
         for (unsigned int i = 0; i < mesh->mNumFaces; i++)
         {
             aiFace face = mesh->mFaces[i];
-            //´æµ½indices Õâ¸övector
+            //å­˜åˆ°indices è¿™ä¸ªvector
             // retrieve all indices of the face and store them in the indices vector
             for (unsigned int j = 0; j < face.mNumIndices; j++)
                 indices.push_back(face.mIndices[j]);
         }
         // process materials
 
-        //´¦Àí²ÄÖÊ
+        //å¤„ç†æè´¨
         aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
         // we assume a convention for sampler names in the shaders. Each diffuse texture should be named
         // as 'texture_diffuseN' where N is a sequential number ranging from 1 to MAX_SAMPLER_NUMBER. 
@@ -175,20 +173,20 @@ private:
         // specular: texture_specularN
         // normal: texture_normalN
 
-        //loadMaterialTextures »ñÈ¡ÎÆÀí ·µ»Øvector 
-        // ÎÆÀí¶¼ÒÔaiTextureType_ ÎªÇ°×º
+        //loadMaterialTextures è·å–çº¹ç† è¿”å›vector 
+        // çº¹ç†éƒ½ä»¥aiTextureType_ ä¸ºå‰ç¼€
         // 1. diffuse maps
-        vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
+        vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse",scene);
         textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
         // 2. specular maps
-        vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
+        vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular", scene);
         textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
-        // 3. normal maps
-        std::vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal");
-        textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
-        // 4. height maps
-        std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height");
-        textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
+        //// 3. normal maps
+        //std::vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal");
+        //textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
+        //// 4. height maps
+        //std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height");
+        //textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 
         // return a mesh object created from the extracted mesh data
         return Mesh(vertices, indices, textures);
@@ -196,7 +194,7 @@ private:
 
     // checks all material textures of a given type and loads the textures if they're not loaded yet.
     // the required info is returned as a Texture struct.
-    vector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, string typeName)
+    vector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, string typeName, const aiScene* scene)
     {
         vector<Texture> textures;
         for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
@@ -268,4 +266,6 @@ unsigned int TextureFromFile(const char* path, const string& directory, bool gam
 
     return textureID;
 }
+
+
 #endif
