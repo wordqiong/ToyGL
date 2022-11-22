@@ -7,7 +7,7 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 // camera
-Camera camera(glm::vec3(5.0f, 8.0f, 15.0f));
+Camera camera(glm::vec3(0.0f, 0.5f, 1.0f));
 // timing
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
