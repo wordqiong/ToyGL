@@ -65,6 +65,13 @@ public:
     {
         return glm::lookAt(Position, Position + Front, Up);
     }
+    glm::mat4 GetReflectMatrix(float height)
+    {
+        glm::vec3 center = Position+Front;
+        return glm::lookAt(glm::vec3(Position.x, -Position.y + height * 2, Position.z), glm::vec3(center.x, -center.y + height * 2, center.z), Up);
+        //return glm::lookAt(Position, glm::vec3(center.x, -center.y + height * 2, center.z), Up);
+        
+    }
 
     // processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
     void ProcessKeyboard(Camera_Movement direction, float deltaTime)

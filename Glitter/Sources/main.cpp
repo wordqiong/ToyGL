@@ -2,6 +2,7 @@
 
 #include "glitter.hpp"
 #include <shader.h>
+
 #include <model.h>
 #include <camera.h>
 // System Headers
@@ -15,7 +16,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <Program.hpp>
 // Standard Headers
 #include <cstdio>
 #include <cstdlib>
@@ -25,14 +25,26 @@
 #include <cmath>
 #include <climits>
 
+//waterheaders
+#include<QuadScreen.hpp>
+#include<FrameBuffer.hpp>
+#include<DepthFramebuffer.hpp>
+#include<Water.hpp>
+#include<Cube.hpp>
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
-unsigned int loadTexture(const char* path);
-
+unsigned int loadTexture(std::vector<std::string> faces);
+unsigned int loadTexture(char const* path);
+void initGL();
+void initWaterPart(Shader* cubeShader,Shader* waterShader,Shader* quadShader);
+void renderwater();
 //window
 GLFWwindow* window;
+QuadScreen quad_screen;
+
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
@@ -46,65 +58,37 @@ bool firstMouse = true;
 // timing
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
-int worldTime = 12000;
 
 // lighting
-glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+glm::vec3 light_pos(0.0f, 0.0f, 0.0f);
+glm::vec3 camera_position;
+glm::vec3 camera_direction;
 
-//water
-const unsigned SAMPLES = 8;
-const unsigned TEXTURES_AMOUNT = 13;
-const unsigned TESS_LEVEL = 16; //对四边形进行更细的划分
-const float DEPTH = 0.2f;
-unsigned heightMap[TEXTURES_AMOUNT];
-unsigned normalMap[TEXTURES_AMOUNT];
-unsigned waterTex;
-unsigned wavesNormalMap;
-unsigned wavesHeightMap;
-unsigned noise;
-unsigned firstIndex = 0;
-unsigned lastIndex = 1;
-bool rotate = false;
-unsigned VAO = 0;
-float interpolateFactor = 0.0f;
-Program program;
+GLuint light_mode_selected;
+GLuint light_mode = 0;
+GLuint water_effect = 0;
 
-void initProgram();
-void initGL();
-void renderWater();
-//framebuffer
-unsigned int framebuffer_water, textureColorbuffer, textureDepthbuffer;
-void initFramebuffer();
-unsigned int loadTexture(std::vector< std::string> faces);
-//cube
-unsigned int cubeVBO, cubeVAO;
-void initCube();
-void renderCube();
-void renderCube2();
-Program cubeprogram;
+//  framebuffer
+Framebuffer* framebuffer_refraction;
+Framebuffer* framebuffer;
+Framebuffer* framebuffer_reflection;
+DepthFramebuffer* depth_framebuffer;
+//  objects
+Cube cube_base[5];
+Cube cube_decoration[2];
+Water water;
+GLuint effect_select;
+
+std::vector<Drawable*> Drawable_list;
+
+//  transforms
+glm::mat4 cube_base_trans[5];
+glm::mat4 cube_deco_trans[2];
+glm::mat4 water_trans;
+glm::mat4 projection = glm::perspective(3.1415f / 2.0f, (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 int main()
 {
     initGL();
-    initProgram();
-    glGenVertexArrays(1, &VAO);
-    glGenTextures(TEXTURES_AMOUNT, heightMap);
-    glGenTextures(TEXTURES_AMOUNT, normalMap);
-    glGenTextures(1, &waterTex);
-    for (unsigned i = 0; i < TEXTURES_AMOUNT; ++i) {
-        std::string num = std::to_string(i + 1);
-        heightMap[i] = loadTexture(("../Glitter/objects/heights/" + num + ".png").c_str());
-        normalMap[i] = loadTexture(("../Glitter/objects/normals/" + num + ".png").c_str());
-    }
-    waterTex = loadTexture("../Glitter/objects/water.jpg");
-    wavesNormalMap = loadTexture("../Glitter/objects/wavesNormal.jpg");
-    wavesHeightMap = loadTexture("../Glitter/objects/wavesHeight.jpg");
-    noise = loadTexture("../Glitter/objects/noise.png");
-
-
-    initCube();
-    initFramebuffer();
-
-
     // build and compile shaders
     // -------------------------
     Shader screenShader("../Glitter/screen_shader.vs", "../Glitter/screen_shader.fs");
@@ -115,6 +99,11 @@ int main()
     Shader skyBoxShader("../Glitter/skybox.vs", "../Glitter/skybox.fs");
     Shader shaderBlur("../Glitter/7.blur.vs", "../Glitter/7.blur.fs");
     Shader shaderBloomFinal("../Glitter/7.bloom_final.vs", "../Glitter/7.bloom_final.fs");
+    
+    //watershader
+    Shader cubeShader("../Glitter/cube.vs", "../Glitter/cube.fs");
+    Shader waterShader("../Glitter/water_vshader.glsl", "../Glitter/water_fshader.glsl");
+    Shader quadShader("../Glitter/quad_screen_vshader.glsl", "../Glitter/quad_screen_fshader.glsl");
     // load models
     // -----------
    /* char* rawobj = your_filereading_function("file/name.obj");
@@ -130,8 +119,7 @@ int main()
     };
 
 
-
-
+    initWaterPart(&cubeShader,&waterShader,&quadShader);
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
@@ -142,31 +130,14 @@ int main()
         lastFrame = currentFrame;
         // input
         processInput(window);
-        //frame render
-        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_water);
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        renderCube2();
-        // render
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // view/projection transformations
-        renderCube();
-        renderWater();
+        renderwater();
 
         glfwPollEvents();
         glfwSwapBuffers(window);
     }
 
     // optional: de-allocate all resources once they've outlived their purpose:
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteTextures(TEXTURES_AMOUNT, heightMap);
-    glDeleteTextures(TEXTURES_AMOUNT, normalMap);
-    glDeleteTextures(1, &waterTex);
-    glDeleteTextures(1, &wavesHeightMap);
-    glDeleteTextures(1, &wavesNormalMap);
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
     glfwTerminate();
@@ -231,62 +202,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 
 // utility function for loading a 2D texture from file
 // ---------------------------------------------------
-unsigned int loadTexture(char const* path)
-{
-    unsigned int textureID;
-    glGenTextures(1, &textureID);
 
-    int width, height, nrComponents;
-    unsigned char* data = stbi_load(path, &width, &height, &nrComponents, 0);
-    if (data)
-    {
-        GLenum format;
-        if (nrComponents == 1)
-            format = GL_RED;
-        else if (nrComponents == 3)
-            format = GL_RGB;
-        else if (nrComponents == 4)
-            format = GL_RGBA;
-
-        glBindTexture(GL_TEXTURE_2D, textureID);
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        stbi_image_free(data);
-    }
-    else
-    {
-        std::cout << "Texture failed to load at path: " << path << std::endl;
-        stbi_image_free(data);
-    }
-
-    return textureID;
-}
-
-void initProgram() {
-    program.create();
-    program.attachShader(createVertexShader("../Glitter/water-vert.vs"));
-    program.attachShader(createTessalationControlShader("../Glitter/water-tess-control.glsl"));
-    program.attachShader(createTessalationEvaluationShader("../Glitter/water-tess-eval.glsl"));
-    program.attachShader(createFragmentShader("../Glitter/water-frag.fs"));
-
-
-
-    program.link();
-    program.use();
-    program.setVec3("light.direction", glm::vec3(0.0, -1.0, 0.0));
-    program.setVec3("light.ambient", glm::vec3(0.3, 0.3, 0.3));
-    program.setVec3("light.diffuse", glm::vec3(0.75, 0.75, 0.75));
-    program.setVec3("light.specular", glm::vec3(1.0, 1.0, 1.0));
-    program.setFloat("interpolateFactor", interpolateFactor);
-    program.setFloat("depth", DEPTH);
-    program.setInt("tessLevel", TESS_LEVEL);
-}
 void initGL() {
     // glfw: initialize and configure
     // ------------------------------
@@ -328,203 +244,17 @@ void initGL() {
     // configure global opengl state
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_MULTISAMPLE);
+    glDepthFunc(GL_LESS);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDepthFunc(GL_LESS);
-    glEnable(GL_STENCIL_TEST);
-    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+    glEnable(GL_CULL_FACE);
+    glFrontFace(GL_CCW);
+    glCullFace(GL_BACK);
+    glEnable(GL_MULTISAMPLE);
     // tell stb_image.h to flip loaded texture's on the y-axis (before loading model).
-    stbi_set_flip_vertically_on_load(true);
+    //stbi_set_flip_vertically_on_load(true);
 }
 
-void renderWater() {
-    glBindVertexArray(VAO);
-    program.use();
-    program.setInt("heightMap1", 0);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, heightMap[firstIndex]);
-
-    program.setInt("heightMap2", 1);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, heightMap[lastIndex]);
-
-    program.setInt("normalMap1", 2);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, normalMap[firstIndex]);
-
-    program.setInt("normalMap2", 3);
-    glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_2D, normalMap[lastIndex]);
-
-    program.setInt("water", 4);
-    glActiveTexture(GL_TEXTURE4);
-    glBindTexture(GL_TEXTURE_2D, waterTex);
-
-    program.setInt("wavesHeightMap", 5);
-    glActiveTexture(GL_TEXTURE5);
-    glBindTexture(GL_TEXTURE_2D, wavesHeightMap);
-
-    program.setInt("wavesNormalMap", 6);
-    glActiveTexture(GL_TEXTURE6);
-    glBindTexture(GL_TEXTURE_2D, wavesNormalMap);
-
-    program.setInt("reflectMap", 7);
-    glActiveTexture(GL_TEXTURE7);
-    glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
-    program.setInt("depthMap", 8);
-    glActiveTexture(GL_TEXTURE8);
-    glBindTexture(GL_TEXTURE_2D, textureDepthbuffer);
-    program.setInt("noise", 9);
-    glActiveTexture(GL_TEXTURE9);
-    glBindTexture(GL_TEXTURE_2D, noise);
-
-    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-    glm::mat4 view = camera.GetViewMatrix();
-    glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(3.0f, 1.0f, 3.0f));
-    program.use();
-    program.setMat4("projection", projection);
-    program.setMat4("view", view);
-    program.setMat4("model", model);
-    worldTime = (worldTime + 1) % 24000;
-    program.setInt("worldTime", worldTime);
-    program.setVec3("viewPos", camera.Position);
-    if (interpolateFactor >= 0.7)
-    {
-        interpolateFactor = 0.3f;
-        if (lastIndex == TEXTURES_AMOUNT - 1)
-        {
-            firstIndex = 0;
-            lastIndex = 1;
-        }
-        else
-        {
-            ++firstIndex;
-            ++lastIndex;
-        }
-    }
-    else
-    {
-        interpolateFactor += 0.03 * deltaTime;
-        program.setFloat("interpolateFactor", interpolateFactor);
-    }
-
-    static float offset = 0.0f;
-    if (offset >= INT_MAX - 2)
-        offset = 0;
-    offset += 0.2 * deltaTime;
-    program.setFloat("wavesOffset", offset);
-
-    glBindVertexArray(VAO);
-    glPatchParameteri(GL_PATCH_VERTICES, 4);
-    glDrawArraysInstanced(GL_PATCHES, 0, 4, 64 * 64);
-    glBindVertexArray(0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-}
-
-void initCube() {
-    float vertices[] = {
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
-    };
-    glGenVertexArrays(1, &cubeVAO);
-    glGenBuffers(1, &cubeVBO);
-
-    glBindVertexArray(cubeVAO);//绑定VAO
-    glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);//绑定VBO
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);//传递顶点数据
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);//设定属性指针
-    glEnableVertexAttribArray(0);
-    cubeprogram.create();
-    cubeprogram.attachShader(createVertexShader("../Glitter/cube.vs"));
-    cubeprogram.attachShader(createFragmentShader("../Glitter/cube.fs"));
-
-    cubeprogram.link();
-}
-void renderCube() {
-    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-    glm::mat4 view = camera.GetViewMatrix();
-    glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.5f, 0.0f));
-    model = glm::scale(model, glm::vec3(0.5, 0.5, 0.5));
-    cubeprogram.use();
-    cubeprogram.setMat4("model", model);
-    cubeprogram.setMat4("view", view);
-    cubeprogram.setMat4("projection", projection);
-    glBindVertexArray(cubeVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-}
-
-void initFramebuffer() {
-    glGenFramebuffers(1, &framebuffer_water);
-    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_water);
-    // create a color attachment texture
-    glGenTextures(1, &textureColorbuffer);
-    glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
-    // create a depth attachment texture
-    glGenTextures(1, &textureDepthbuffer);
-    glBindTexture(GL_TEXTURE_2D, textureDepthbuffer);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SCR_WIDTH, SCR_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, textureDepthbuffer, 0);
-}
-void renderCube2() {
-    glm::vec3 rPos = glm::vec3(camera.Position.x, -camera.Position.y, camera.Position.z);
-    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-    glm::vec3 Front = glm::vec3(camera.Front.x, -camera.Front.y, camera.Front.z);
-    glm::mat4 view = glm::lookAt(camera.Position, camera.Position + glm::vec3(camera.Front.x, 0.0, camera.Front.z), camera.Up);
-    glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    model = glm::scale(model, glm::vec3(0.5, 0.5, 0.5));
-    cubeprogram.use();
-    cubeprogram.setMat4("model", model);
-    cubeprogram.setMat4("view", view);
-    cubeprogram.setMat4("projection", projection);
-    glBindVertexArray(cubeVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-}
 //skybox
 // 
 // utility function for loading a 2D texture from file
@@ -557,4 +287,212 @@ unsigned int loadTexture(std::vector<std::string> faces)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
     return textureID;
+}
+
+void initWaterPart(Shader* cubeShader, Shader* waterShader, Shader* quadShader) {
+    for (size_t i = 0; i < 5; i++) {
+        cube_base[i].Init(cubeShader);
+        cube_base[i].SetColor(glm::vec3(1.0f - 0.1f * i, 1.0f - 0.1f * i, 1.0f - 0.1f * i));
+        Drawable_list.push_back(&cube_base[i]);
+    }
+    cube_decoration[0].Init(cubeShader);
+    cube_decoration[0].SetColor(glm::vec3(0.6f, 1.0f, 0.6f));
+    cube_decoration[1].Init(cubeShader);
+    cube_decoration[1].SetColor(glm::vec3(1.0f, 0.6f, 0.6f));
+    Drawable_list.push_back(&cube_decoration[0]);
+    Drawable_list.push_back(&cube_decoration[1]);
+
+    water.Init(waterShader);
+    Drawable_list.push_back(&water);
+
+    cube_base_trans[0] = glm::translate(glm::mat4(1.0f), glm::vec3(15.0f, 0.0f, 0.0f));
+    cube_base_trans[0] = glm::scale(cube_base_trans[0], glm::vec3(5.0f, 2.5f, 20.0f));
+    cube_base_trans[1] = glm::translate(glm::mat4(1.0f), glm::vec3(-5.0f, 0.0f, -15.0f));
+    cube_base_trans[1] = glm::scale(cube_base_trans[1], glm::vec3(15.0f, 2.5f, 5.0f));
+    cube_base_trans[2] = glm::translate(glm::mat4(1.0f), glm::vec3(-5.0f, 0.0f, 15.0f));
+    cube_base_trans[2] = glm::scale(cube_base_trans[2], glm::vec3(15.0f, 2.5f, 5.0f));
+    cube_base_trans[3] = glm::translate(glm::mat4(1.0f), glm::vec3(-15.0f, 0.0f, 0.0f));
+    cube_base_trans[3] = glm::scale(cube_base_trans[3], glm::vec3(5.0f, 2.5f, 10.0f));
+    cube_base_trans[4] = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.5f, 0.0f));
+    cube_base_trans[4] = glm::scale(cube_base_trans[4], glm::vec3(20.0f, 0.5f, 20.0f));
+
+    cube_deco_trans[0] = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, -4.0f));
+    cube_deco_trans[0] = glm::scale(cube_deco_trans[0], glm::vec3(2.5f, 2.5f, 2.5f));
+    cube_deco_trans[1] = glm::translate(glm::mat4(1.0f), glm::vec3(-15.0f, 5.0f, 4.0f));
+    cube_deco_trans[1] = glm::scale(cube_deco_trans[1], glm::vec3(2.5f, 2.5f, 2.5f));
+
+    water_trans = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, 0.0f));
+    water_trans = glm::scale(water_trans, glm::vec3(20.0f, 20.0f, 20.0f));
+    glClearColor(0.3f, 0.6f, 1.0f, 1.0f);
+    //framebuffers
+    framebuffer_refraction = new Framebuffer();
+    framebuffer_refraction->Init(SCR_WIDTH, SCR_HEIGHT, false);
+
+    framebuffer_reflection = new Framebuffer();
+    framebuffer_reflection->Init(SCR_WIDTH, SCR_HEIGHT, false);
+
+    depth_framebuffer = new DepthFramebuffer();
+    depth_framebuffer->Init(SCR_WIDTH, SCR_HEIGHT);
+    depth_framebuffer->SetPerspective(projection);
+
+    framebuffer = new Framebuffer();
+    GLuint tex_fb = framebuffer->Init(SCR_WIDTH, SCR_HEIGHT, true);
+    GLuint tex_noise = loadTexture("../Glitter/objects/noise.png");
+
+    water.SetRefractTexture(framebuffer_refraction->get_texture());
+    water.SetReflectTexture(framebuffer_reflection->get_texture());
+    water.set_texture_refraction_depth(depth_framebuffer->GetTexId());
+    water.SetNoiseTexture(tex_noise);
+
+    quad_screen.Init(tex_fb, SCR_WIDTH, SCR_HEIGHT, quadShader->ID);
+
+    depth_framebuffer->SetCamera(&camera);
+
+    //clip coord to tell shader not to draw anything over the water
+    for (size_t i = 0; i < Drawable_list.size(); i++) {
+        Drawable_list[i]->SetClipCoord(0, 1, 0, -2);
+    }
+
+    light_mode_selected = 1;
+}
+
+unsigned int loadTexture(char const* path)
+{
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+
+    int width, height, nrComponents;
+    unsigned char* data = stbi_load(path, &width, &height, &nrComponents, 0);
+    if (data)
+    {
+        GLenum format;
+        if (nrComponents == 1)
+            format = GL_RED;
+        else if (nrComponents == 3)
+            format = GL_RGB;
+        else if (nrComponents == 4)
+            format = GL_RGBA;
+
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        stbi_image_free(data);
+    }
+    else
+    {
+        std::cout << "Texture failed to load at path: " << path << std::endl;
+        stbi_image_free(data);
+    }
+
+    return textureID;
+}
+
+void renderwater() {
+    water.set_effect(water_effect);
+    for (size_t i = 0; i < 5; i++) {
+        cube_base[i].SetMVPMat(cube_base_trans[i], camera.GetViewMatrix(), projection);
+    }
+
+    for (size_t i = 0; i < 2; i++) {
+        cube_decoration[i].SetMVPMat(cube_deco_trans[i], camera.GetViewMatrix(), projection);
+    }
+
+    water.SetMVPMat(water_trans, camera.GetViewMatrix(), projection);
+    water.SetTime(glfwGetTime()); //time for the movement of waves
+
+    for (size_t i = 0; i < Drawable_list.size(); i++) {
+        Drawable_list[i]->SetLightPos(light_pos);
+
+        Drawable_list[i]->SetCameraPos(camera.Position);
+        Drawable_list[i]->SetCameraDir(camera.Front);
+
+        Drawable_list[i]->set_window_dim(SCR_WIDTH, SCR_HEIGHT);
+
+        Drawable_list[i]->set_shadow_buffer_texture_size(SCR_WIDTH, SCR_HEIGHT);
+        Drawable_list[i]->set_shadow_buffer_texture(depth_framebuffer->GetTexId());
+        Drawable_list[i]->SetShadow(depth_framebuffer->GetShadow());
+    }
+    water.SetEnabled(false); //dont display water in refraction
+
+    framebuffer_refraction->bind();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    for (size_t i = 0; i < Drawable_list.size(); i++) {
+        Drawable_list[i]->Draw();
+    }
+
+    framebuffer_refraction->unbind();
+
+    depth_framebuffer->DrawFB(&Drawable_list);
+
+    water.SetEnabled(true);
+
+    //==============REFLEXION STEP
+    framebuffer_reflection->bind();
+    glEnable(GL_CLIP_DISTANCE0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    //use the different view matrix which is from under the water
+    for (size_t i = 0; i < 5; i++) {
+        cube_base[i].SetMVPMat(cube_base_trans[i], camera.GetReflectMatrix(2.0f), projection);
+    }
+
+    for (size_t i = 0; i < 2; i++) {
+        cube_decoration[i].SetMVPMat(cube_deco_trans[i], camera.GetReflectMatrix(2), projection);
+    }
+
+    water.SetMVPMat(water_trans, camera.GetReflectMatrix(2), projection);
+
+    for (size_t i = 0; i < Drawable_list.size(); i++) {
+        Drawable_list[i]->Draw();
+    }
+
+    glDisable(GL_CLIP_DISTANCE0);
+    framebuffer_reflection->unbind();
+
+    //sets back the normal view matrix
+    for (size_t i = 0; i < 5; i++) {
+        cube_base[i].SetMVPMat(cube_base_trans[i], camera.GetViewMatrix(), projection);
+    }
+
+    for (size_t i = 0; i < 2; i++) {
+        cube_decoration[i].SetMVPMat(cube_deco_trans[i], camera.GetViewMatrix(), projection);
+    }
+
+    water.SetMVPMat(water_trans, camera.GetViewMatrix(), projection);
+    //===============FINAL STEP
+    //print to the real, color, multisample frambuffer
+    framebuffer->bind();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    for (size_t i = 0; i < Drawable_list.size(); i++) {
+        Drawable_list[i]->Draw();
+    }
+
+    framebuffer->unbind();
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    quad_screen.draw(effect_select);
+
+    if (light_mode_selected == 0) {
+        light_pos = glm::vec3(10, 15, -10);
+    }
+    else if (light_mode_selected == 1) {
+        light_pos = glm::vec3(16.0 * cos(glfwGetTime() / 2), 8, 16.0 * sin(glfwGetTime() / 2));
+    }
+    else if (light_mode_selected == 2) {
+        light_pos = glm::vec3(30, 30, 0);
+    }
+    else if (light_mode_selected == 3) {
+        light_pos = glm::vec3(30, 30, 30);
+    }
+
 }

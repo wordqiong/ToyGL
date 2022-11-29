@@ -1,6 +1,4 @@
-﻿#ifndef MODEL_H
-#define MODEL_H
-
+﻿#pragma once
 #include <glad/glad.h> 
 
 #include <glm/glm.hpp>
@@ -10,6 +8,8 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
+#define STB_IMAGE_STATIC 
+#include <stb_image.h>
 #include <mesh.h>
 #include <shader.h>
 #include <string>
@@ -18,8 +18,7 @@
 #include <iostream>
 #include <map>
 #include <vector>
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
+
 using namespace std;
 
 unsigned int TextureFromFile(const char* path, const string& directory, bool gamma = false);
@@ -268,6 +267,3 @@ unsigned int TextureFromFile(const char* path, const string& directory, bool gam
 
     return textureID;
 }
-
-
-#endif

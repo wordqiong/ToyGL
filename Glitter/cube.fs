@@ -1,11 +1,37 @@
-#version 410 core
-out vec4 FragColor;
 
-//in vec2 TexCoord;
+#version 330 core
 
-//uniform sampler2D texture1;
-//uniform sampler2D texture2;
+in vec3 frag_surface_normal_color;
+
+uniform sampler2D shadow_buffer_tex;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+uniform vec3 light_position;
+
+in float red;
+in float green;
+in float blue;
+out vec4 color;
+
+in vec3 frag_position;
+in vec3 frag_normal;
+in vec4 shadow_coord;
+
+uniform uint window_width;
+uniform uint window_height;
+uniform uint shadow_mapping_effect;
+
+uniform vec3 shape_color;
+
+uniform uint shadow_buffer_tex_size;
 
 void main(){
-    FragColor=vec4(1.0,1.0,1.0,1.0);
+
+   vec3 light_dir = normalize(light_position-frag_position);
+   float diffuse_light = dot(frag_normal, light_dir);
+
+   color = vec4(diffuse_light*shape_color, 1.0);
 }
