@@ -40,7 +40,17 @@ unsigned int loadTexture(std::vector<std::string> faces);
 unsigned int loadTexture(char const* path);
 void initGL();
 void initWaterPart(Shader* cubeShader,Shader* waterShader,Shader* quadShader);
-void renderwater();
+void renderwater(Shader* ourShader, Model* ourModel, Shader* shaderBlur);
+glm::vec3 pointLightPositions[] = {
+glm::vec3(0.7f,  0.2f,  2.0f),
+glm::vec3(2.3f, -3.3f, -4.0f),
+glm::vec3(-4.0f,  2.0f, -12.0f),
+glm::vec3(0.0f,  0.0f, -3.0f)
+};
+
+
+
+
 //window
 GLFWwindow* window;
 QuadScreen quad_screen;
@@ -50,7 +60,7 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 // camera
-Camera camera(glm::vec3(0.0f, 0.5f, 2.0f));
+Camera camera(glm::vec3(0.0f, 2.5f, 2.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -73,6 +83,44 @@ Framebuffer* framebuffer_refraction;
 Framebuffer* framebuffer;
 Framebuffer* framebuffer_reflection;
 DepthFramebuffer* depth_framebuffer;
+
+unsigned int pingpongFBO[2];
+unsigned int pingpongColorbuffers[2];
+unsigned int colorBuffers[2];
+unsigned int hdrFBO;
+//  model frame buffer
+
+unsigned int quadVAO = 0;
+unsigned int quadVBO;
+bool bloom = true;
+bool bloomKeyPressed = false;
+float exposure = 1.0f;
+void renderQuad()
+{
+    if (quadVAO == 0)
+    {
+        float quadVertices[] = {
+            // positions        // texture Coords
+            -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+             1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+             1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+        };
+        // setup plane VAO
+        glGenVertexArrays(1, &quadVAO);
+        glGenBuffers(1, &quadVBO);
+        glBindVertexArray(quadVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    }
+    glBindVertexArray(quadVAO);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glBindVertexArray(0);
+}
 //  objects
 Cube cube_base[5];
 Cube cube_decoration[2];
@@ -86,40 +134,158 @@ glm::mat4 cube_base_trans[5];
 glm::mat4 cube_deco_trans[2];
 glm::mat4 water_trans;
 glm::mat4 projection = glm::perspective(3.1415f / 2.0f, (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+void initModel(Shader* ourShader) {
+    ourShader->use();
+    // directional light
+    ourShader->setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
+    ourShader->setVec3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
+    ourShader->setVec3("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
+    ourShader->setVec3("dirLight.specular", 0.5f, 0.5f, 0.5f);
+    // point light 1
+    ourShader->setVec3("pointLights[0].position", pointLightPositions[0]);
+    ourShader->setVec3("pointLights[0].ambient", 0.05f, 0.05f, 0.05f);
+    ourShader->setVec3("pointLights[0].diffuse", 0.8f, 0.8f, 0.8f);
+    ourShader->setVec3("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
+    ourShader->setFloat("pointLights[0].constant", 1.0f);
+    ourShader->setFloat("pointLights[0].linear", 0.09f);
+    ourShader->setFloat("pointLights[0].quadratic", 0.032f);
+    // point light 2
+    ourShader->setVec3("pointLights[1].position", pointLightPositions[1]);
+    ourShader->setVec3("pointLights[1].ambient", 0.05f, 0.05f, 0.05f);
+    ourShader->setVec3("pointLights[1].diffuse", 0.8f, 0.8f, 0.8f);
+    ourShader->setVec3("pointLights[1].specular", 1.0f, 1.0f, 1.0f);
+    ourShader->setFloat("pointLights[1].constant", 1.0f);
+    ourShader->setFloat("pointLights[1].linear", 0.09f);
+    ourShader->setFloat("pointLights[1].quadratic", 0.032f);
+    // point light 3
+    ourShader->setVec3("pointLights[2].position", pointLightPositions[2]);
+    ourShader->setVec3("pointLights[2].ambient", 0.05f, 0.05f, 0.05f);
+    ourShader->setVec3("pointLights[2].diffuse", 0.8f, 0.8f, 0.8f);
+    ourShader->setVec3("pointLights[2].specular", 1.0f, 1.0f, 1.0f);
+    ourShader->setFloat("pointLights[2].constant", 1.0f);
+    ourShader->setFloat("pointLights[2].linear", 0.09f);
+    ourShader->setFloat("pointLights[2].quadratic", 0.032f);
+    // point light 4
+    ourShader->setVec3("pointLights[3].position", pointLightPositions[3]);
+    ourShader->setVec3("pointLights[3].ambient", 0.05f, 0.05f, 0.05f);
+    ourShader->setVec3("pointLights[3].diffuse", 0.8f, 0.8f, 0.8f);
+    ourShader->setVec3("pointLights[3].specular", 1.0f, 1.0f, 1.0f);
+    ourShader->setFloat("pointLights[3].constant", 1.0f);
+    ourShader->setFloat("pointLights[3].linear", 0.09f);
+    ourShader->setFloat("pointLights[3].quadratic", 0.032f);
+    // spotLight
+    ourShader->setVec3("spotLight.position", camera.Position);
+    ourShader->setVec3("spotLight.direction", camera.Front);
+    ourShader->setVec3("spotLight.ambient", 0.0f, 0.0f, 0.0f);
+    ourShader->setVec3("spotLight.diffuse", 1.0f, 1.0f, 1.0f);
+    ourShader->setVec3("spotLight.specular", 1.0f, 1.0f, 1.0f);
+    ourShader->setFloat("spotLight.constant", 1.0f);
+    ourShader->setFloat("spotLight.linear", 0.09f);
+    ourShader->setFloat("spotLight.quadratic", 0.032f);
+    ourShader->setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
+    ourShader->setFloat("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
+
+
+    ourShader->setVec3("material.specular", 0.5f, 0.5f, 0.5f);
+    // material properties
+    ourShader->setFloat("material.shininess", 64.0f);
+
+    glm::mat4 view = camera.GetViewMatrix();
+
+    ourShader->setMat4("projection", projection);
+    ourShader->setMat4("view", camera.GetViewMatrix());
+
+    // draw floor as normal, but don't write the floor to the stencil buffer, we only care about the containers. We set its mask to 0x00 to not write to the stencil buffer.
+
+    // render the loaded model
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
+    model = glm::scale(model, glm::vec3(1.0f));	// it's a bit too big for our scene, so scale it down
+
+    model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
+    ourShader->setMat4("model", model);
+}
 int main()
 {
     initGL();
     // build and compile shaders
     // -------------------------
-    Shader screenShader("../Glitter/screen_shader.vs", "../Glitter/screen_shader.fs");
-    Shader ourShaderSingle("../Glitter/single_color.vs", "../Glitter/single_color.fs");
-    Shader ourShader("../Glitter/1.model_loading.vs", "../Glitter/1.model_loading.fs");
-    Shader ourShader2("../Glitter/1.model_loading.vs", "../Glitter/model_loading.fs");
-    Shader lightCubeShader("../Glitter/light_cube.vs", "../Glitter/lightt_cube.fs");
-    Shader skyBoxShader("../Glitter/skybox.vs", "../Glitter/skybox.fs");
-    Shader shaderBlur("../Glitter/7.blur.vs", "../Glitter/7.blur.fs");
-    Shader shaderBloomFinal("../Glitter/7.bloom_final.vs", "../Glitter/7.bloom_final.fs");
+    Shader screenShader("../Glitter/Shaders/screen_shader.vs", "../Glitter/Shaders/screen_shader.fs");
+    Shader ourShaderSingle("../Glitter/Shaders/single_color.vs", "../Glitter/Shaders/single_color.fs");
+    Shader ourShader("../Glitter/Shaders/1.model_loading.vs", "../Glitter/Shaders/1.model_loading.fs");
+    Shader ourShader2("../Glitter/Shaders/1.model_loading.vs", "../Glitter/Shaders/model_loading.fs");
+    Shader lightCubeShader("../Glitter/Shaders/light_cube.vs", "../Glitter/Shaders/lightt_cube.fs");
+    Shader skyBoxShader("../Glitter/Shaders/skybox.vs", "../Glitter/Shaders/skybox.fs");
+    Shader shaderBlur("../Glitter/Shaders/7.blur.vs", "../Glitter/Shaders/7.blur.fs");
+    Shader shaderBloomFinal("../Glitter/Shaders/7.bloom_final.vs", "../Glitter/Shaders/7.bloom_final.fs");
     
     //watershader
-    Shader cubeShader("../Glitter/cube.vs", "../Glitter/cube.fs");
-    Shader waterShader("../Glitter/water_vshader.glsl", "../Glitter/water_fshader.glsl");
-    Shader quadShader("../Glitter/quad_screen_vshader.glsl", "../Glitter/quad_screen_fshader.glsl");
+    Shader cubeShader("../Glitter/Shaders/cube.vs", "../Glitter/Shaders/cube.fs");
+    Shader waterShader("../Glitter/Shaders/water_vshader.glsl", "../Glitter/Shaders/water_fshader.glsl");
+    Shader quadShader("../Glitter/Shaders/quad_screen_vshader.glsl", "../Glitter/Shaders/quad_screen_fshader.glsl");
     // load models
     // -----------
-   /* char* rawobj = your_filereading_function("file/name.obj");
-    objgl2StreamInfo strinfo = objgl2_init_bufferstream(rawobj);
-    objgl2Data objd = objgl2_readobj(&strinfo);*/
     Model ourModel("../Glitter/objects/nanosuit.obj");
     unsigned int VBO, cubeVAO;
-    glm::vec3 pointLightPositions[] = {
-    glm::vec3(0.7f,  0.2f,  2.0f),
-    glm::vec3(2.3f, -3.3f, -4.0f),
-    glm::vec3(-4.0f,  2.0f, -12.0f),
-    glm::vec3(0.0f,  0.0f, -3.0f)
-    };
+
+    glGenFramebuffers(1, &hdrFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
+    // create 2 floating point color buffers (1 for normal rendering, other for brightness threshold values)
+
+    glGenTextures(2, colorBuffers);
+    for (unsigned int i = 0; i < 2; i++)
+    {
+        glBindTexture(GL_TEXTURE_2D, colorBuffers[i]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);  // we clamp to the edge as the blur filter would otherwise sample repeated texture values!
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        // attach texture to framebuffer
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, colorBuffers[i], 0);
+    }
+    // create and attach depth buffer (renderbuffer)
+    unsigned int rboDepth;
+    glGenRenderbuffers(1, &rboDepth);
+    glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, SCR_WIDTH, SCR_HEIGHT);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
+    // tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
+    unsigned int attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+    glDrawBuffers(2, attachments);
+    // finally check if framebuffer is complete
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        std::cout << "Framebuffer not complete!" << std::endl;
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+    // ping-pong-framebuffer for blurring
+
+    glGenFramebuffers(2, pingpongFBO);
+    glGenTextures(2, pingpongColorbuffers);
+    for (unsigned int i = 0; i < 2; i++)
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[i]);
+        glBindTexture(GL_TEXTURE_2D, pingpongColorbuffers[i]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // we clamp to the edge as the blur filter would otherwise sample repeated texture values!
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pingpongColorbuffers[i], 0);
+        // also check if framebuffers are complete (no need for depth buffer)
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            std::cout << "Framebuffer not complete!" << std::endl;
+    }
 
 
     initWaterPart(&cubeShader,&waterShader,&quadShader);
+
+    initModel(&ourShader);
+    quadShader.use();
+
+    shaderBlur.use();
+    shaderBlur.setInt("image", 0);
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
@@ -129,9 +295,51 @@ int main()
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
         // input
-        processInput(window);
+        
 
-        renderwater();
+        processInput(window);
+        glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
+        glEnable(GL_DEPTH_TEST); // enable depth testing (is disabled for rendering screen-space quad)
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); // don't forget to clear the stencil buffer!
+        glStencilMask(0x00);
+        glStencilFunc(GL_ALWAYS, 1, 0xFF);
+        glStencilMask(0xFF);
+        ourShader.use();
+        initModel(&ourShader);
+        ourModel.Draw(ourShader);
+        ////泛光收尾函数
+        glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+        glStencilMask(0x00);
+        glDisable(GL_DEPTH_TEST);
+        ourShaderSingle.use();
+        initModel(&ourShaderSingle);
+        ourModel.Draw(ourShaderSingle);
+        glBindVertexArray(0);
+        glStencilMask(0xFF);
+        glStencilFunc(GL_ALWAYS, 0, 0xFF);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+        bool horizontal = true, first_iteration = true;
+        unsigned int amount = 10;
+        shaderBlur.use();
+        for (unsigned int i = 0; i < amount; i++)
+        {
+            glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[horizontal]);
+            shaderBlur.setInt("horizontal", horizontal);
+            glBindTexture(GL_TEXTURE_2D, first_iteration ? colorBuffers[1] : pingpongColorbuffers[!horizontal]);  // bind texture of other framebuffer (or scene if first iteration)
+            renderQuad();
+            horizontal = !horizontal;
+            if (first_iteration)
+                first_iteration = false;
+        }
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glEnable(GL_DEPTH_TEST);
+        renderwater(&ourShader,&ourModel,&shaderBlur);
 
         glfwPollEvents();
         glfwSwapBuffers(window);
@@ -251,7 +459,11 @@ void initGL() {
     glFrontFace(GL_CCW);
     glCullFace(GL_BACK);
     glEnable(GL_MULTISAMPLE);
+    glEnable(GL_STENCIL_TEST);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
     // tell stb_image.h to flip loaded texture's on the y-axis (before loading model).
+    stbi_set_flip_vertically_on_load(true);
     //stbi_set_flip_vertically_on_load(true);
 }
 
@@ -338,9 +550,11 @@ void initWaterPart(Shader* cubeShader, Shader* waterShader, Shader* quadShader) 
     framebuffer = new Framebuffer();
     GLuint tex_fb = framebuffer->Init(SCR_WIDTH, SCR_HEIGHT, true);
     GLuint tex_noise = loadTexture("../Glitter/objects/noise.png");
-
+    water.SetGussPingPongTexture(pingpongColorbuffers[1]);
+    water.SetGussPingPong_2Texture(colorBuffers[0]);
     water.SetRefractTexture(framebuffer_refraction->get_texture());
     water.SetReflectTexture(framebuffer_reflection->get_texture());
+    //TODO 把另一个buffer给加进来
     water.set_texture_refraction_depth(depth_framebuffer->GetTexId());
     water.SetNoiseTexture(tex_noise);
 
@@ -393,8 +607,10 @@ unsigned int loadTexture(char const* path)
     return textureID;
 }
 
-void renderwater() {
+void renderwater(Shader* ourShader,Model* ourModel,Shader* shaderBlur) {
     water.set_effect(water_effect);
+    water.SetGussPingPongTexture(pingpongColorbuffers[1]);
+    water.SetGussPingPong_2Texture(colorBuffers[0]);
     for (size_t i = 0; i < 5; i++) {
         cube_base[i].SetMVPMat(cube_base_trans[i], camera.GetViewMatrix(), projection);
     }
@@ -421,7 +637,7 @@ void renderwater() {
     water.SetEnabled(false); //dont display water in refraction
 
     framebuffer_refraction->bind();
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     for (size_t i = 0; i < Drawable_list.size(); i++) {
         Drawable_list[i]->Draw();
@@ -435,9 +651,12 @@ void renderwater() {
 
     //==============REFLEXION STEP
     framebuffer_reflection->bind();
-    glEnable(GL_CLIP_DISTANCE0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    glEnable(GL_CLIP_DISTANCE0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+
+    renderQuad();
     //use the different view matrix which is from under the water
     for (size_t i = 0; i < 5; i++) {
         cube_base[i].SetMVPMat(cube_base_trans[i], camera.GetReflectMatrix(2.0f), projection);
@@ -469,17 +688,20 @@ void renderwater() {
     //===============FINAL STEP
     //print to the real, color, multisample frambuffer
     framebuffer->bind();
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    //ourShader->use();
+    //initModel(ourShader);
+    //ourModel->Draw(*ourShader);
     for (size_t i = 0; i < Drawable_list.size(); i++) {
         Drawable_list[i]->Draw();
     }
 
     framebuffer->unbind();
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
+    quad_screen.set_model_before_texture(colorBuffers[0]);
+    quad_screen.set_model_texture(pingpongColorbuffers[1]);
     quad_screen.draw(effect_select);
 
     if (light_mode_selected == 0) {

@@ -16,6 +16,8 @@ uniform sampler2D tex_depth_refraction;
 uniform sampler2D tex_refraction;
 uniform sampler2D tex_reflection;
 uniform sampler2D tex_noise;
+uniform sampler2D tex_pingpong;
+uniform sampler2D tex_pingpong_2;
 
 uniform float time;
 uniform uint water_effect;
@@ -129,7 +131,7 @@ void main(){
    vec3 colour_refraction = texture( tex_refraction, corr_screen_pos_refraction ).rgb;
    vec3 colour_reflection = texture( tex_reflection, corr_screen_pos_reflection ).rgb;
    vec3 depth_refraction = texture( tex_depth_refraction, corr_screen_pos_refraction ).rbg;
-
+   vec3 colour_guss=texture(tex_pingpong,uv_frag).rbg;
    float far = 1000;
    float near = 0.1;
 
@@ -150,8 +152,22 @@ void main(){
 
    color.a = 1.0;
    color.rgb = (1-angle_view)*colour_reflection + angle_view*colour_depth + 0.5*diffuse_light+spec_light;
-//   color.rgb *= (1+getCaustics()*10);
 
+  const float gamma = 2.2;
+   vec3 hdrColor = texture(tex_pingpong_2, corr_screen_pos_reflection).rgb;
+   vec3 bloomColor = texture(tex_pingpong, corr_screen_pos_reflection).rgb;
+
+      hdrColor += bloomColor; // additive blending
+   // tone mapping
+   vec3 result = vec3(1.0) - exp(-hdrColor * 1.0);
+   // also gamma correct while we're at it
+   result = pow(result, vec3(1.0 / gamma));
+   vec3 color_out = result;
+
+
+    color.rgb +=(result); 
+//   color.rgb *= (1+getCaustics()*10);
+  // color.rgb +=colour_guss;
 }
 
 void main_colors_const(){

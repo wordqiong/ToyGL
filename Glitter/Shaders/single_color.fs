@@ -8,5 +8,5 @@ in vec2 TexCoords;
 void main()
 {             
     
-    BrightColor= vec4( 0.3,0.3,0.3,0.01);
+    BrightColor= vec4( 0.3,0.3,0.3,0.1);
 }

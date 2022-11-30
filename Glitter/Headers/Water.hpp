@@ -25,7 +25,8 @@ protected:
    GLuint _tex_reflection;
    GLuint _tex_depth_refraction;
    GLuint _tex_noise;
-
+   GLuint _tex_pingpong;
+   GLuint _tex_pingpong_2;
    GLuint _effect;
 
    float _time;
@@ -141,13 +142,28 @@ public:
     _time = time;
   }
 
-  void SetRefractTexture(GLuint tex){
-    _tex_refraction = tex;
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, _tex_refraction);
-    _waterShader->setInt("tex_refraction", 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
+  void SetRefractTexture(GLuint tex) {
+      _tex_refraction = tex;
+      glActiveTexture(GL_TEXTURE0);
+      glBindTexture(GL_TEXTURE_2D, _tex_refraction);
+      _waterShader->setInt("tex_refraction", 0);
+      glBindTexture(GL_TEXTURE_2D, 0);
   }
+  void SetGussPingPongTexture(GLuint tex) {
+      _tex_pingpong = tex;
+      glActiveTexture(GL_TEXTURE4);
+      glBindTexture(GL_TEXTURE_2D, _tex_pingpong);
+      _waterShader->setInt("tex_pingpong", 4);
+      glBindTexture(GL_TEXTURE_2D, 0);
+  }
+  void SetGussPingPong_2Texture(GLuint tex) {
+      _tex_pingpong_2 = tex;
+      glActiveTexture(GL_TEXTURE5);
+      glBindTexture(GL_TEXTURE_2D, _tex_pingpong_2);
+      _waterShader->setInt("tex_pingpong_2", 5);
+      glBindTexture(GL_TEXTURE_2D, 0);
+  }
+
 
   void SetReflectTexture(GLuint tex){
     _tex_reflection = tex;
@@ -208,6 +224,14 @@ public:
     glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_2D, _tex_noise);
     _waterShader->setInt("tex_noise", 3);
+
+    glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_2D, _tex_pingpong);
+    _waterShader->setInt("tex_pingpong", 4);
+
+    glActiveTexture(GL_TEXTURE5);
+    glBindTexture(GL_TEXTURE_2D, _tex_pingpong_2);
+    _waterShader->setInt("tex_pingpong_2", 5);
 
     if(_enabled){
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);

@@ -15,7 +15,8 @@ protected:
   GLuint _vbo;
   GLuint _tex;
   GLuint _ao_tex;
-  GLuint _depth_tex;
+  GLuint _model_tex;
+  GLuint _model_before_tex;
   GLuint _width;
   GLuint _height;
 
@@ -79,14 +80,20 @@ public:
     this->_ao_tex = ao_tex;
   }
 
-  void set_depth_texture(GLuint depth_tex){
-    this->_depth_tex = depth_tex;
+  void set_model_texture(GLuint _model_tex) {
+      this->_model_tex = _model_tex;
+  }
+  void set_model_before_texture(GLuint _model_before_tex) {
+      this->_model_before_tex = _model_before_tex;
   }
 
   void cleanup(){
     /// TODO
   }
-
+  GLuint getID()
+  {
+      return this->_sid;
+  }
   void draw(unsigned int effect_select){
     glUseProgram(_sid);
     glBindVertexArray(_vao);
@@ -95,7 +102,9 @@ public:
 
     glUniform1ui( glGetUniformLocation(_sid, "effect_select"), effect_select);
     glUniform1f( glGetUniformLocation(_sid, "tex_width"), _width);
-    glUniform1f( glGetUniformLocation(_sid, "tex_height"), _height);
+    glUniform1f(glGetUniformLocation(_sid, "tex_height"), _height);
+    glUniform1f(glGetUniformLocation(_sid, "bloom"), 1);
+    glUniform1f(glGetUniformLocation(_sid, "exposure"), 1.0);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, _tex);
@@ -108,9 +117,14 @@ public:
     glUniform1i(tex_id, 1 /*GL_TEXTURE1*/);
 
     glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, _depth_tex);
-    tex_id = glGetUniformLocation(_sid, "depth_tex");
-    glUniform1i(tex_id, 2 /*GL_TEXTURE1*/);
+    glBindTexture(GL_TEXTURE_2D, _model_before_tex);
+    tex_id = glGetUniformLocation(_sid, "model_before_tex");
+    glUniform1i(tex_id, 2 /*GL_TEXTURE2*/);
+
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, _model_tex);
+    tex_id = glGetUniformLocation(_sid, "model_tex");
+    glUniform1i(tex_id, 3 /*GL_TEXTURE2*/);
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
