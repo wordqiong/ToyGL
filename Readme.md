@@ -4,7 +4,8 @@
 
 ```bash
 git clone https://github.com/wordqiong/ToyGL.git
-cd Glitter
+mkdir build
+cd build
 ```
 
 Now generate a project file or makefile for your platform. If you want to use a particular IDE, make sure it is installed; don't forget to set the Start-Up Project in Visual Studio or the Target in Xcode.
