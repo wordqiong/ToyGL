@@ -3,7 +3,9 @@
 #include "glitter.hpp"
 #include <shader.h>
 
-#include <model.h>
+#include <model_animation.h>
+#include <animator.h>
+//#include <model.h>
 #include <camera.h>
 // System Headers
 #include <glad/glad.h>
@@ -195,15 +197,18 @@ void initModel(Shader* ourShader) {
     ourShader->setMat4("projection", projection);
     ourShader->setMat4("view", camera.GetViewMatrix());
 
+    
+
     // draw floor as normal, but don't write the floor to the stencil buffer, we only care about the containers. We set its mask to 0x00 to not write to the stencil buffer.
 
     // render the loaded model
+    /*
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
     model = glm::scale(model, glm::vec3(1.0f));	// it's a bit too big for our scene, so scale it down
 
     model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
-    ourShader->setMat4("model", model);
+    ourShader->setMat4("model", model);*/
 }
 int main()
 {
@@ -225,7 +230,10 @@ int main()
     Shader quadShader("../Glitter/Shaders/quad_screen_vshader.glsl", "../Glitter/Shaders/quad_screen_fshader.glsl");
     // load models
     // -----------
-    Model ourModel("../Glitter/objects/nanosuit.obj");
+    //Model ourModel("../Glitter/objects/nanosuit.obj");
+    Model ourModel("../Glitter/objects/final/Guppy.fbx");
+    Animation Animation("../Glitter/objects/final/Guppy.fbx", &ourModel);
+    Animator animator(&Animation);
     unsigned int VBO, cubeVAO;
 
     glGenFramebuffers(1, &hdrFBO);
@@ -298,6 +306,8 @@ int main()
         
 
         processInput(window);
+        animator.UpdateAnimation(deltaTime);
+
         glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
 
         glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
@@ -309,6 +319,15 @@ int main()
         glStencilMask(0xFF);
         ourShader.use();
         initModel(&ourShader);
+        //
+        auto transforms = animator.GetFinalBoneMatrices();
+        for (int i = 0; i < transforms.size(); ++i)
+            ourShader.setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, -0.4f, 0.0f)); // translate it down so it's at the center of the scene
+        model = glm::scale(model, glm::vec3(.01f, .01f, .01f));	// it's a bit too big for our scene, so scale it down
+        ourShader.setMat4("model", model);
+        //
         ourModel.Draw(ourShader);
         ////·º¹âÊÕÎ²º¯Êý
         glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
@@ -316,7 +335,7 @@ int main()
         glDisable(GL_DEPTH_TEST);
         ourShaderSingle.use();
         initModel(&ourShaderSingle);
-        ourModel.Draw(ourShaderSingle);
+        //ourModel.Draw(ourShaderSingle);
         glBindVertexArray(0);
         glStencilMask(0xFF);
         glStencilFunc(GL_ALWAYS, 0, 0xFF);
@@ -324,7 +343,7 @@ int main()
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         bool horizontal = true, first_iteration = true;
-        unsigned int amount = 10;
+        unsigned int amount = 1000;
         shaderBlur.use();
         for (unsigned int i = 0; i < amount; i++)
         {

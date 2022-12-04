@@ -1,6 +1,6 @@
 // Preprocessor Directives
-#ifndef GLITTER
-#define GLITTER
+#ifndef GLITTER_H
+#define GLITTER_H
 
 // System Headers
 #include <assimp/Importer.hpp>
@@ -9,9 +9,9 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include<GLFW/glfw3.h>
-#include<iostream>
-#include<math.h>
+#include <GLFW/glfw3.h>
+#include <iostream>
+#include <math.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>

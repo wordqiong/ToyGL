@@ -1,7 +1,9 @@
-#pragma once 
+#ifndef TEXTURE_H
+#define TEXTURE_H
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#define STB_IMAGE_STATIC
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #include <iostream>
@@ -79,3 +81,5 @@ public:
   }
 
 };
+
+#endif
