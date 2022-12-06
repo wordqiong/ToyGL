@@ -27,6 +27,7 @@ protected:
    GLuint _tex_noise;
    GLuint _tex_pingpong;
    GLuint _tex_pingpong_2;
+   GLuint _tex_particle;
    GLuint _effect;
 
    float _time;
@@ -164,6 +165,14 @@ public:
       glBindTexture(GL_TEXTURE_2D, 0);
   }
 
+  void SetParticleTexture(GLuint tex) {
+      _tex_particle = tex;
+      glActiveTexture(GL_TEXTURE5);
+      glBindTexture(GL_TEXTURE_2D, _tex_particle);
+      _waterShader->setInt("tex_particle", 6);
+      glBindTexture(GL_TEXTURE_2D, 0);
+  }
+
 
   void SetReflectTexture(GLuint tex){
     _tex_reflection = tex;
@@ -232,6 +241,10 @@ public:
     glActiveTexture(GL_TEXTURE5);
     glBindTexture(GL_TEXTURE_2D, _tex_pingpong_2);
     _waterShader->setInt("tex_pingpong_2", 5);
+
+    glActiveTexture(GL_TEXTURE6);
+    glBindTexture(GL_TEXTURE_2D, _tex_particle);
+    _waterShader->setInt("tex_particle", 6);
 
     if(_enabled){
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);

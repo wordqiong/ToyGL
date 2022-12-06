@@ -3,6 +3,8 @@ uniform sampler2D tex;
 uniform sampler2D ao_tex;
 uniform sampler2D model_before_tex;
 uniform sampler2D model_tex;
+uniform sampler2D model_particle_tex;
+
 uniform float tex_width;
 uniform float tex_height;
 in vec2 uv;
@@ -164,8 +166,9 @@ void main() {
    vec3 result = vec3(1.0) - exp(-hdrColor * exposure);
    // also gamma correct while we're at it
    result = pow(result, vec3(1.0 / gamma));
-   color_out += result;
+   //color_out = hdrColor;
+   color_out+=result;
    color_out+=texture(model_tex, uv).rgb;
-
+   color_out+=texture(model_particle_tex, uv).rgb;
    color = vec4(color_out, 1.0);
 }

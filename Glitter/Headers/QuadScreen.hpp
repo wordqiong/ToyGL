@@ -17,6 +17,7 @@ protected:
   GLuint _ao_tex;
   GLuint _model_tex;
   GLuint _model_before_tex;
+  GLuint _model_particle_tex;
   GLuint _width;
   GLuint _height;
 
@@ -86,6 +87,9 @@ public:
   void set_model_before_texture(GLuint _model_before_tex) {
       this->_model_before_tex = _model_before_tex;
   }
+  void set_model_particle_texture(GLuint _model_particle_tex) {
+      this->_model_particle_tex = _model_particle_tex;
+  }
 
   void cleanup(){
     /// TODO
@@ -125,6 +129,11 @@ public:
     glBindTexture(GL_TEXTURE_2D, _model_tex);
     tex_id = glGetUniformLocation(_sid, "model_tex");
     glUniform1i(tex_id, 3 /*GL_TEXTURE2*/);
+
+    glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_2D, _model_particle_tex);
+    tex_id = glGetUniformLocation(_sid, "model_particle_tex");
+    glUniform1i(tex_id, 4 /*GL_TEXTURE2*/);
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 

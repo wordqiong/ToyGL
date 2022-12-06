@@ -68,7 +68,10 @@ public:
     glm::mat4 GetReflectMatrix(float height)
     {
         glm::vec3 center = Position+Front;
-        return glm::lookAt(glm::vec3(Position.x, -Position.y + height * 2, Position.z), glm::vec3(center.x, -center.y + height * 2, center.z), Up);
+        glm::vec3 ref_cam_focus = glm::vec3(center.x,-center.y+height*2,center.z);
+        glm::vec3 ref_cam_pos = glm::vec3(Position.x,-Position.y+height*2,Position.z);
+        glm::vec3 ref_cam_up = glm::normalize(glm::cross(Right,ref_cam_focus-ref_cam_pos));
+        return glm::lookAt(ref_cam_pos,ref_cam_focus,ref_cam_up);
         //return glm::lookAt(Position, glm::vec3(center.x, -center.y + height * 2, center.z), Up);
         
     }
