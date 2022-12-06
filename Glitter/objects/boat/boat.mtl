@@ -1,0 +1,103 @@
+# 3ds Max Wavefront OBJ Exporter v0.99 - (c)2007 guruware
+# 创建的文件:05.12.2022 00:13:44
+
+newmtl white
+	Kd 0.6667 0.6667 0.6667
+	Ks 0.1800 0.1800 0.1800
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.4700
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+
+newmtl boat_elements_black
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.3600 0.3600 0.3600
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.4500
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+
+newmtl boat_screw_hooks_bronze
+	Kd 0.2941 0.2157 0.0510
+	Ks 0.7200 0.7200 0.7200
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.2000
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+
+newmtl boat_silver
+	Kd 0.3333 0.3333 0.3333
+	Ks 0.7200 0.7200 0.7200
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.2000
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+
+newmtl boat_buffer
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.2700 0.2700 0.2700
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.9000
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd boat_buffer_diffuse.jpg
+
+newmtl boat_roof_accessory
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.3600 0.3600 0.3600
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8500
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd boat_roof_accessory_diffuse.jpg
+
+newmtl boat_body
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.3600 0.3600 0.3600
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.4500
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd boat_body_diffuse.jpg

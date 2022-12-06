@@ -1,0 +1,572 @@
+# 3ds Max Wavefront OBJ Exporter v0.99 - (c)2007 guruware
+# 创建的文件:04.12.2022 23:51:50
+
+newmtl FGFBXASC032FootFBXASC032StoolFBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Foot Stool_FootStool_albedo.jpg
+
+newmtl FGFBXASC032PillowFBXASC03210FBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Pillow 10_PillowLarge_albedo.jpg
+
+newmtl FGFBXASC032SideFBXASC032TableFBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Side Table_SideTable_albedo.jpg
+
+newmtl FGFBXASC032DecorFBXASC03203FBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Decor 03_Metal_albedo.jpg
+
+newmtl FGFBXASC032TVFBXASC032RackFBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG TV Rack_TVRack_albedo.jpg
+
+newmtl FGFBXASC032VaseFBXASC03201FBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Vase 01_Vase_albedo.jpg
+
+newmtl FGFBXASC032PillowFBXASC0321FBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Pillow 1_Pillow1_albedo.jpg
+
+newmtl FGFBXASC032NightstandFBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Nightstand_NightStand_albedo.jpg
+
+newmtl FGFBXASC032PillowFBXASC0323FBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Pillow 3_Pillow3_albedo.jpg
+
+newmtl FGFBXASC032CenterFBXASC032TableFBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Center Table_CenterTable_albedo.jpg
+
+newmtl FGFBXASC032DresserFBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Dresser_Dresser_albedo.jpg
+
+newmtl FGFBXASC032AreaFBXASC032RugFBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Area Rug_AreaRug_albedo.jpg
+
+newmtl FGFBXASC032ChairFBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Chair_Chair_albedo.jpg
+
+newmtl FGFBXASC032AreaFBXASC032Rug2FBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Area Rug2_AreaRug2_albedo.jpg
+
+newmtl FGFBXASC032CabinetFBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Cabinet_Cabinet_albedo.jpg
+
+newmtl FGFBXASC032RoundFBXASC032TableFBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Round Table_RoundTable_albedo.jpg
+
+newmtl FGFBXASC032VaseFBXASC03203FBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Vase 03_Vase_albedo.jpg
+
+newmtl FGFBXASC032BenchFBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Bench_Bench_albedo.jpg
+
+newmtl FGFBXASC032SofaFBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Sofa_Sofa_albedo.jpg
+
+newmtl FGFBXASC032TeaFBXASC032PotFBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Tea Pot_TeaPot_albedo.jpg
+
+newmtl FGFBXASC032Nightstand_dup_2FBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Nightstand_NightStand_albedo.jpg
+
+newmtl FGFBXASC032FlowerFBXASC032VaseFBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Flower Vase_FlowerVase_albedo.jpg
+
+newmtl FGFBXASC032TeaFBXASC032CupFBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Tea Cup_TeaCup_albedo.jpg
+
+newmtl FGFBXASC032VaseFBXASC03202FBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Vase 02_Vase_albedo.jpg
+
+newmtl FGFBXASC032PillowFBXASC0328FBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Pillow 8_PillowSmall_albedo.jpg
+
+newmtl FGFBXASC032KingFBXASC032BedFBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG King Bed_KingBed_albedo.jpg
+
+newmtl FGFBXASC032PillowFBXASC0325FBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Pillow 5_Pillow5_albedo.jpg
+
+newmtl FGFBXASC032CornerFBXASC032TVFBXASC032StandFBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Corner TV Stand_CornerStand_albedo.jpg
+
+newmtl FGFBXASC032MiniFBXASC032TableFBXASC032StandFBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Mini Table Stand_MiniTableStand_albedo.jpg
+
+newmtl FGFBXASC032PillowFBXASC0322FBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Pillow 2_Pillow2_albedo.jpg
+
+newmtl FGFBXASC032PillowFBXASC0325_dup_2FBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Pillow 5_Pillow5_albedo.jpg
+
+newmtl FGFBXASC032PillowFBXASC0329FBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Pillow 9_PillowMedium_albedo.jpg
+
+newmtl FGFBXASC032SofaFBXASC0323FBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Sofa 3_Sofa3_albedo.jpg
+
+newmtl FGFBXASC032Chair_dup_2FBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Chair_Chair_albedo.jpg
+
+newmtl FGFBXASC032BoxFBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Box_Box_albedo.jpg
+
+newmtl FGFBXASC032PillowFBXASC0324FBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Pillow 4_Pillow4_albedo.jpg
+
+newmtl FGFBXASC032SideFBXASC032TableFBXASC0322FBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Side Table 2_SideTable_albedo.jpg
+
+newmtl FGFBXASC032SofaFBXASC0322FBXASC046ShapeSG
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.2000 0.2000 0.2000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8200
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5000
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd FG Sofa 2_Sofa2_albedo.jpg

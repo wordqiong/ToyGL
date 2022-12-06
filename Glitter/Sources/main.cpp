@@ -4,6 +4,7 @@
 #include <shader.h>
 
 #include <model_animation.h>
+#include<model.h>
 #include <animator.h>
 //#include <model.h>
 #include <camera.h>
@@ -44,7 +45,10 @@ unsigned int loadTexture(std::vector<std::string> faces);
 unsigned int loadTexture(char const* path);
 void initGL();
 void initWaterPart(Shader* cubeShader,Shader* waterShader,Shader* quadShader);
-void renderwater(Shader* ourShader, Model* ourModel, Shader* shaderBlur);
+void renderwater(Shader* ourShader, Model* ourModel, Shader* shaderBlur,Model_obj* boatModel,Model_obj* indoorModel,Shader* boatShader,  Shader* blendingShader);
+unsigned int loadTransparentTexture(char const* path);
+void drawBoat();
+
 glm::vec3 pointLightPositions[] = {
 glm::vec3(0.7f,  0.2f,  2.0f),
 glm::vec3(2.3f, -3.3f, -4.0f),
@@ -102,7 +106,12 @@ bool bloom = true;
 bool bloomKeyPressed = false;
 float exposure = 1.0f;
 
+//boat
 
+float baseX = 0.0f, baseY = 5.0f, baseZ = -3.0f;
+unsigned int transparentVAO, transparentVBO;
+unsigned int transparentTexture;
+unsigned int boatTexture;
 
 void renderQuad();
 //  objects
@@ -149,16 +158,6 @@ void SortParticles() {
     std::sort(&ParticlesContainer[0], &ParticlesContainer[MaxParticles]);
 }
 
-
-
-
-
-
-
-
-
-
-
 int main()
 {
     initGL();
@@ -173,7 +172,8 @@ int main()
     Shader skyBoxShader("../Glitter/Shaders/skybox.vs", "../Glitter/Shaders/skybox.fs");
     Shader shaderBlur("../Glitter/Shaders/7.blur.vs", "../Glitter/Shaders/7.blur.fs");
     Shader shaderBloomFinal("../Glitter/Shaders/7.bloom_final.vs", "../Glitter/Shaders/7.bloom_final.fs");
-    
+    Shader blendingShader("../Glitter/blending.vs", "../Glitter/blending.fs");
+
     //watershader
     Shader cubeShader("../Glitter/Shaders/cube.vs", "../Glitter/Shaders/cube.fs");
     Shader waterShader("../Glitter/Shaders/water_vshader.glsl", "../Glitter/Shaders/water_fshader.glsl");
@@ -182,8 +182,24 @@ int main()
     // -----------
     //Model ourModel("../Glitter/objects/nanosuit.obj");
     Model ourModel("../Glitter/objects/final/Guppy.fbx");
+    Shader boatShader("../Glitter/Shaders/2.model_loading.vs", "../Glitter/Shaders/2.model_loading.fs");
+
+    Model_obj boatModel("../Glitter/objects/boat/boat.obj");
+    Model_obj indoorModel("../Glitter/objects/indoor/indoor.obj");
+
     Animation Animation("../Glitter/objects/final/Guppy.fbx", &ourModel);
     Animator animator(&Animation);
+
+    float transparentVertices[] = {
+        // positions         // texture Coords (swapped y coordinates because texture is flipped upside down)
+        0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+        0.0f, -0.5f,  0.0f,  0.0f,  1.0f,
+        1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+
+        0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+        1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+        1.0f,  0.5f,  0.0f,  1.0f,  0.0f
+    };
 
 
 
@@ -343,6 +359,7 @@ int main()
     // render loop
     // -----------
     lastFrame= static_cast<float>(glfwGetTime());
+
     while (!glfwWindowShouldClose(window))
     {
 
@@ -358,6 +375,7 @@ int main()
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, -0.4f, 0.0f)); // translate it down so it's at the center of the scene
         model = glm::scale(model, glm::vec3(.01f, .01f, .01f));	// it's a bit too big for our scene, so scale it down
+
 
 
         glm::mat4 projection = glm::perspective(3.1415f / 2.0f, (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
@@ -456,6 +474,9 @@ int main()
 
         //printf("%d ",ParticlesCount);
 
+        transparentTexture = loadTransparentTexture(("../Glitter/objects/window2.png"));
+        boatTexture = loadTransparentTexture(("../Glitter/objects/black.png"));
+
 
         // Update the buffers that OpenGL uses for rendering.
         // There are much more sophisticated means to stream data from the CPU to the GPU, 
@@ -546,6 +567,92 @@ int main()
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
         glDisableVertexAttribArray(2);
+
+        glBindTexture(GL_TEXTURE_2D, boatTexture);
+        boatShader.use();
+        initModel(&boatShader);
+
+
+        glEnable(GL_DEPTH_TEST);
+        // render the loaded model
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(baseX, baseY, baseZ)); // translate it down so it's at the center of the scene
+        model = glm::scale(model, glm::vec3(5.0f));	// it's a bit too big for our scene, so scale it down
+
+       // model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
+        boatShader.setMat4("model", model);
+        boatModel.Draw(boatShader);
+        // render the loaded model
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3((baseX+0.4f), (baseY-1.1f), (baseZ+1.42f))); // translate it down so it's at the center of the scene
+        model = glm::scale(model, glm::vec3(3.4f));	// it's a bit too big for our scene, so scale it down
+
+        boatShader.setMat4("model", model);
+        indoorModel.Draw(boatShader);
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+
+        glGenVertexArrays(1, &transparentVAO);
+        glGenBuffers(1, &transparentVBO);
+        glBindVertexArray(transparentVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, transparentVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(transparentVertices), transparentVertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+        glBindVertexArray(0);
+
+
+
+        vector<glm::vec3> windows
+        {
+            glm::vec3(baseX - 1.7f, baseY - 0.35f, baseZ + 1.425f),
+            glm::vec3(baseX - 1.30f, baseY - 0.35f, baseZ + 1.36f),
+            glm::vec3(baseX + 0.68f, baseY - 0.48f, baseZ + 1.25f),
+            glm::vec3(baseX + 1.17f, baseY - 0.465f, baseZ + 1.23f),
+            glm::vec3(baseX - 1.7f, baseY - 0.38f, baseZ + 3.20f),
+            glm::vec3(baseX - 1.28f, baseY - 0.38f, baseZ + 3.27f),
+            glm::vec3(baseX + 0.7f, baseY - 0.5f, baseZ + 3.33f),
+            glm::vec3(baseX + 1.2f, baseY - 0.5f, baseZ + 3.33f)
+            //glm::vec3(0.5f, 0.0f, -0.6f)
+        };
+
+        blendingShader.use();
+        blendingShader.setInt("texture1", 0);
+
+        std::map<float, glm::vec3> sorted;
+        for (unsigned int i = 0; i < windows.size(); i++)
+        {
+            float distance = glm::length(camera.Position - windows[i]);
+            sorted[distance] = windows[i];
+        }
+
+        //glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        //glm::mat4 view = camera.GetViewMatrix();
+        //glm::mat4 model = glm::mat4(1.0f);
+        blendingShader.setMat4("projection", projection);
+        blendingShader.setMat4("view", camera.GetViewMatrix());
+
+        glBindVertexArray(transparentVAO);
+        glBindTexture(GL_TEXTURE_2D, transparentTexture);
+        for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
+        {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, it->second);
+            model = glm::scale(model, glm::vec3(0.2f));
+            //model = glm::translate(model, lightPos);
+            blendingShader.setMat4("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+
+
+
+
+
+
         glBindBuffer(GL_FRAMEBUFFER, 0);
 
 
@@ -558,6 +665,78 @@ int main()
         glStencilMask(0x00);
         glStencilFunc(GL_ALWAYS, 1, 0xFF);
         glStencilMask(0xFF);
+
+        glBindTexture(GL_TEXTURE_2D, boatTexture);
+        boatShader.use();
+        initModel(&boatShader);
+
+
+        glEnable(GL_DEPTH_TEST);
+        // render the loaded model
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(baseX, baseY, baseZ)); // translate it down so it's at the center of the scene
+        model = glm::scale(model, glm::vec3(5.0f));	// it's a bit too big for our scene, so scale it down
+
+       // model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
+        boatShader.setMat4("model", model);
+        boatModel.Draw(boatShader);
+        // render the loaded model
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3((baseX+0.4f), (baseY-1.1f), (baseZ+ 1.42f))); // translate it down so it's at the center of the scene
+        model = glm::scale(model, glm::vec3(3.4f));	// it's a bit too big for our scene, so scale it down
+
+        boatShader.setMat4("model", model);
+        indoorModel.Draw(boatShader);
+
+        //glEnable(GL_BLEND);
+        //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        //glGenVertexArrays(1, &transparentVAO);
+        //glGenBuffers(1, &transparentVBO);
+        //glBindVertexArray(transparentVAO);
+        //glBindBuffer(GL_ARRAY_BUFFER, transparentVBO);
+        //glBufferData(GL_ARRAY_BUFFER, sizeof(transparentVertices), transparentVertices, GL_STATIC_DRAW);
+        //glEnableVertexAttribArray(0);
+        //glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+        //glEnableVertexAttribArray(1);
+        //glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+        //glBindVertexArray(0);
+
+
+
+
+        //blendingShader.use();
+        //blendingShader.setInt("texture1", 0);
+
+   
+        //for (unsigned int i = 0; i < windows.size(); i++)
+        //{
+        //    float distance = glm::length(camera.Position - windows[i]);
+        //    sorted[distance] = windows[i];
+        //}
+
+        ////glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        ////glm::mat4 view = camera.GetViewMatrix();
+        ////glm::mat4 model = glm::mat4(1.0f);
+        //blendingShader.setMat4("projection", projection);
+        //blendingShader.setMat4("view", camera.GetViewMatrix());
+
+        //glBindVertexArray(transparentVAO);
+        //glBindTexture(GL_TEXTURE_2D, transparentTexture);
+        //for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
+        //{
+        //    model = glm::mat4(1.0f);
+        //    model = glm::translate(model, it->second);
+        //    model = glm::scale(model, glm::vec3(0.2f));
+        //    //model = glm::translate(model, lightPos);
+        //    blendingShader.setMat4("model", model);
+        //    glDrawArrays(GL_TRIANGLES, 0, 6);
+        //}
+        
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, -0.4f, 0.0f)); // translate it down so it's at the center of the scene
+        model = glm::scale(model, glm::vec3(.01f, .01f, .01f));	// it's a bit too big for our scene, so scale it down
+
         ourShader.use();
         initModel(&ourShader);
         //
@@ -567,13 +746,20 @@ int main()
          ourShader.setMat4("model", model);
         //
         ourModel.Draw(ourShader);
+
+
+
+       
+
+
+
         ////泛光收尾函数
         glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
         glStencilMask(0x00);
         glDisable(GL_DEPTH_TEST);
         ourShaderSingle.use();
         initModel(&ourShaderSingle);
-        //ourModel.Draw(ourShaderSingle);
+        ourModel.Draw(ourShaderSingle);
         glBindVertexArray(0);
         glStencilMask(0xFF);
         glStencilFunc(GL_ALWAYS, 0, 0xFF);
@@ -596,7 +782,7 @@ int main()
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glEnable(GL_DEPTH_TEST);
-        renderwater(&ourShader, &ourModel, &shaderBlur);
+        renderwater(&ourShader, &ourModel, &shaderBlur,&boatModel,&indoorModel,&boatShader,&blendingShader);
 
         glfwPollEvents();
         glfwSwapBuffers(window);
@@ -608,6 +794,9 @@ int main()
     glfwTerminate();
     return 0;
 }
+
+void drawBoat();
+
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
@@ -860,7 +1049,7 @@ unsigned int loadTexture(char const* path)
     return textureID;
 }
 
-void renderwater(Shader* ourShader, Model* ourModel, Shader* shaderBlur) {
+void renderwater(Shader* ourShader, Model* ourModel, Shader* shaderBlur, Model_obj* boatModel, Model_obj* indoorModel, Shader* boatShader,Shader* blendingShader) {
     water.set_effect(water_effect);
     water.SetGussPingPongTexture(pingpongColorbuffers[1]);
     water.SetGussPingPong_2Texture(colorBuffers[0]);
@@ -945,9 +1134,71 @@ void renderwater(Shader* ourShader, Model* ourModel, Shader* shaderBlur) {
     //ourShader->use();
     //initModel(ourShader);
     //ourModel->Draw(*ourShader);
+    glBindTexture(GL_TEXTURE_2D, boatTexture);
+    boatShader->use();
+    initModel(boatShader);
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(baseX, baseY, baseZ)); // translate it down so it's at the center of the scene
+    model = glm::scale(model, glm::vec3(5.0f));	// it's a bit too big for our scene, so scale it down
+
+   // model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
+    boatShader->setMat4("model", model);
+    boatModel->Draw(*boatShader);
+    // render the loaded model
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3((baseX + 0.4f), (baseY - 1.1f), (baseZ + 1.42f))); // translate it down so it's at the center of the scene
+    model = glm::scale(model, glm::vec3(3.4f));	// it's a bit too big for our scene, so scale it down
+
+    boatShader->setMat4("model", model);
+    indoorModel->Draw(*boatShader);
+
     for (size_t i = 0; i < Drawable_list.size(); i++) {
         Drawable_list[i]->Draw();
     }
+
+
+
+    vector<glm::vec3> windows
+    {
+        glm::vec3(baseX - 1.7f, baseY - 0.35f, baseZ + 1.425f),
+        glm::vec3(baseX - 1.30f, baseY - 0.35f, baseZ + 1.36f),
+        glm::vec3(baseX + 0.68f, baseY - 0.48f, baseZ + 1.25f),
+        glm::vec3(baseX + 1.17f, baseY - 0.465f, baseZ + 1.23f),
+        glm::vec3(baseX - 1.7f, baseY - 0.38f, baseZ + 3.20f),
+        glm::vec3(baseX - 1.28f, baseY - 0.38f, baseZ + 3.27f),
+        glm::vec3(baseX + 0.7f, baseY - 0.5f, baseZ + 3.33f),
+        glm::vec3(baseX + 1.2f, baseY - 0.5f, baseZ + 3.33f)
+        //glm::vec3(0.5f, 0.0f, -0.6f)
+    };
+
+    blendingShader->use();
+    blendingShader->setInt("texture1", 0);
+
+    std::map<float, glm::vec3> sorted;
+    for (unsigned int i = 0; i < windows.size(); i++)
+    {
+        float distance = glm::length(camera.Position - windows[i]);
+        sorted[distance] = windows[i];
+    }
+
+    //glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    //glm::mat4 view = camera.GetViewMatrix();
+    //glm::mat4 model = glm::mat4(1.0f);
+    blendingShader->setMat4("projection", projection);
+    blendingShader->setMat4("view", camera.GetViewMatrix());
+
+    glBindVertexArray(transparentVAO);
+    glBindTexture(GL_TEXTURE_2D, transparentTexture);
+    for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
+    {
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, it->second);
+        model = glm::scale(model, glm::vec3(0.2f));
+        //model = glm::translate(model, lightPos);
+        blendingShader->setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
+
 
     framebuffer->unbind();
 
@@ -1073,4 +1324,41 @@ void renderQuad()
     glBindVertexArray(quadVAO);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glBindVertexArray(0);
+}
+
+unsigned int loadTransparentTexture(char const* path)
+{
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+
+    int width, height, nrComponents;
+    unsigned char* data = stbi_load(path, &width, &height, &nrComponents, 0);
+    if (data)
+    {
+        GLenum format;
+        if (nrComponents == 1)
+            format = GL_RED;
+        else if (nrComponents == 3)
+            format = GL_RGB;
+        else if (nrComponents == 4)
+            format = GL_RGBA;
+
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT); // for this tutorial: use GL_CLAMP_TO_EDGE to prevent semi-transparent borders. Due to interpolation it takes texels from next repeat 
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        stbi_image_free(data);
+    }
+    else
+    {
+        std::cout << "Texture failed to load at path: " << path << std::endl;
+        stbi_image_free(data);
+    }
+
+    return textureID;
 }

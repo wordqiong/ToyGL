@@ -23,7 +23,7 @@ using namespace std;
 
 unsigned int TextureFromFile(const char* path, const string& directory, bool gamma = false);
 
-class Model
+class Model_obj
 {
 public:
     // model data 
@@ -36,7 +36,7 @@ public:
     bool gammaCorrection;
 
     // 构造函数，给它一个路径，让他用load model来加载文件
-    Model(string const& path, bool gamma = false) : gammaCorrection(gamma)
+    Model_obj(string const& path, bool gamma = false) : gammaCorrection(gamma)
     {
         loadModel(path);
     }
