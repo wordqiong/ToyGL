@@ -157,18 +157,6 @@ void main() {
    else if(effect_select == 8u){
       color_out = vec3(get_ao_blur(uv));
    }
-   const float gamma = 2.2;
-   vec3 hdrColor = texture(model_before_tex, uv).rgb;
-   vec3 bloomColor = texture(model_tex, uv).rgb;
-   if(bloom)
-      hdrColor += bloomColor; // additive blending
-   // tone mapping
-   vec3 result = vec3(1.0) - exp(-hdrColor * exposure);
-   // also gamma correct while we're at it
-   result = pow(result, vec3(1.0 / gamma));
-   //color_out = hdrColor;
-   color_out+=result;
-   color_out+=texture(model_tex, uv).rgb;
-   color_out+=texture(model_particle_tex, uv).rgb;
+ 
    color = vec4(color_out, 1.0);
 }

@@ -1219,6 +1219,7 @@ void initfoam(Shader *foamShader) {
 }
 void renderFoam(Shader* foamShader)
 {
+    glDisable(GL_CULL_FACE);
     foamShader->use();
 
     foamShader->setInt("_MainTex", 0);
@@ -1230,7 +1231,7 @@ void renderFoam(Shader* foamShader)
 
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
-
+    glEnable(GL_CULL_FACE);
 }
 
 void initWaterPart(Shader* cubeShader, Shader* waterShader, Shader* quadShader) {
