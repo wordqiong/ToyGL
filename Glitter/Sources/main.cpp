@@ -45,7 +45,7 @@ unsigned int loadTexture(std::vector<std::string> faces);
 unsigned int loadTexture(char const* path);
 void initGL();
 void initWaterPart(Shader* cubeShader,Shader* waterShader,Shader* quadShader);
-void renderwater(Shader* ourShader, Model* fishModel, Shader* shaderBlur,Model_obj* boatModel,Model_obj* indoorModel,Shader* boatShader,  Shader* blendingShader);
+void renderwater(Shader* ourShader, Model* fishModel, Shader* shaderBlur,Model_obj* boatModel,Model_obj* indoorModel,Shader* boatShader,  Shader* blendingShader, Shader* skyboxShader) ;
 unsigned int loadTransparentTexture(char const* path);
 glm::vec3 sin_(float angle, float speed, float height);
 void drawBoat();
@@ -174,6 +174,23 @@ void initModel(Shader* ourShader);
 Particle ParticlesContainer[MaxParticles];
 int LastUsedParticle = 0;
 
+
+//skybox
+vector<std::string> faces
+{
+    "../Glitter/objects/skybox/right.jpg",
+    "../Glitter/objects/skybox/left.jpg",
+    "../Glitter/objects/skybox/top.jpg",
+    "../Glitter/objects/skybox/bottom.jpg",
+    "../Glitter/objects/skybox/front.jpg",
+    "../Glitter/objects/skybox/back.jpg"
+
+};
+
+unsigned int skyboxVAO, skyboxVBO;
+unsigned int cubemapTexture;
+
+
 // Finds a Particle in ParticlesContainer which isn't used yet.
 // (i.e. life < 0);
 int FindUnusedParticle() {
@@ -297,7 +314,7 @@ int main()
     };
 
     // skybox VAO
-    unsigned int skyboxVAO, skyboxVBO;
+
     glGenVertexArrays(1, &skyboxVAO);
     glGenBuffers(1, &skyboxVBO);
     glBindVertexArray(skyboxVAO);
@@ -305,18 +322,7 @@ int main()
     glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-
-    vector<std::string> faces
-    {
-        "../Glitter/objects/skybox/right.jpg",
-        "../Glitter/objects/skybox/left.jpg",
-        "../Glitter/objects/skybox/top.jpg",
-        "../Glitter/objects/skybox/bottom.jpg",
-        "../Glitter/objects/skybox/front.jpg",
-        "../Glitter/objects/skybox/back.jpg"
-
-    };
-    unsigned int cubemapTexture = loadCubemap(faces);
+    cubemapTexture = loadCubemap(faces);
 
     //unsigned int VBO, cubeVAO;
 
@@ -953,24 +959,9 @@ int main()
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glEnable(GL_DEPTH_TEST);
 
-        renderwater(&ourShader, &fishModel, &shaderBlur,&boatModel,&indoorModel,&boatShader,&blendingShader);
+        renderwater(&ourShader, &fishModel, &shaderBlur,&boatModel,&indoorModel,&boatShader,&blendingShader,&skyboxShader);
 
-        //skybox///////////////////////////////////////////////////////////
-        // draw skybox as last
-        glm::mat4 view = camera.GetViewMatrix();
-        glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
-        skyboxShader.use();
-        view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
-        skyboxShader.setMat4("view", view);
-        skyboxShader.setMat4("projection", projection);
-        // skybox cube
-        glBindVertexArray(skyboxVAO);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        glBindVertexArray(0);
-        glDepthFunc(GL_LESS); // set depth function back to default
-        ///////////////////////////////////////////////////////////
+       
         glfwPollEvents();
         glfwSwapBuffers(window);
     }
@@ -1236,7 +1227,7 @@ unsigned int loadTexture(char const* path)
     return textureID;
 }
 
-void renderwater(Shader* ourShader, Model* fishModel, Shader* shaderBlur, Model_obj* boatModel, Model_obj* indoorModel, Shader* boatShader,Shader* blendingShader) {
+void renderwater(Shader* ourShader, Model* fishModel, Shader* shaderBlur, Model_obj* boatModel, Model_obj* indoorModel, Shader* boatShader,Shader* blendingShader,Shader* skyboxShader) {
     water.set_effect(water_effect);
     water.SetGussPingPongTexture(pingpongColorbuffers[1]);
     water.SetGussPingPong_2Texture(colorBuffers[0]);
@@ -1386,7 +1377,22 @@ void renderwater(Shader* ourShader, Model* fishModel, Shader* shaderBlur, Model_
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }
 
-
+    //skybox///////////////////////////////////////////////////////////
+       // draw skybox as last
+    glm::mat4 view = camera.GetViewMatrix();
+    glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
+    skyboxShader->use();
+    view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
+    skyboxShader->setMat4("view", view);
+    skyboxShader->setMat4("projection", projection);
+    // skybox cube
+    glBindVertexArray(skyboxVAO);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    glBindVertexArray(0);
+    glDepthFunc(GL_LESS); // set depth function back to default
+    ///////////////////////////////////////////////////////////
     framebuffer->unbind();
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
