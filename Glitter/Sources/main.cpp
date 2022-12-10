@@ -1249,24 +1249,35 @@ void initWaterPart(Shader* cubeShader, Shader* waterShader, Shader* quadShader) 
     water.Init(waterShader);
     Drawable_list.push_back(&water);
 
-    cube_base_trans[0] = glm::translate(glm::mat4(1.0f), glm::vec3(15.0f, 0.0f, 0.0f));
-    cube_base_trans[0] = glm::scale(cube_base_trans[0], glm::vec3(5.0f, 2.5f, 20.0f));
-    cube_base_trans[1] = glm::translate(glm::mat4(1.0f), glm::vec3(-5.0f, 0.0f, -15.0f));
-    cube_base_trans[1] = glm::scale(cube_base_trans[1], glm::vec3(15.0f, 2.5f, 5.0f));
-    cube_base_trans[2] = glm::translate(glm::mat4(1.0f), glm::vec3(-5.0f, 0.0f, 15.0f));
-    cube_base_trans[2] = glm::scale(cube_base_trans[2], glm::vec3(15.0f, 2.5f, 5.0f));
-    cube_base_trans[3] = glm::translate(glm::mat4(1.0f), glm::vec3(-15.0f, 0.0f, 0.0f));
-    cube_base_trans[3] = glm::scale(cube_base_trans[3], glm::vec3(5.0f, 2.5f, 10.0f));
+    cube_base_trans[0] = glm::translate(glm::mat4(1.0f), glm::vec3(100.0f, 0.0f, 0.0f));
+    cube_base_trans[0] = glm::scale(cube_base_trans[0],glm::vec3(5.0f, 2.5f, 100.0f));
+    cube_base_trans[1] = glm::translate(glm::mat4(1.0f), glm::vec3(-25.0f, 0.0f, -100.0f));
+    cube_base_trans[1] = glm::scale(cube_base_trans[1],glm::vec3(100.0f, 2.5f, 5.0f));
+    cube_base_trans[2] = glm::translate(glm::mat4(1.0f), glm::vec3(-25.0f, 0.0f, 100.0f));
+    cube_base_trans[2] = glm::scale(cube_base_trans[2],glm::vec3(100.0f, 2.5f, 5.0f));
+    cube_base_trans[3] = glm::translate(glm::mat4(1.0f), glm::vec3(-100.0f, 0.0f, 0.0f));
+    cube_base_trans[3] = glm::scale(cube_base_trans[3],glm::vec3(5.0f, 2.5f, 100.0f));
     cube_base_trans[4] = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.5f, 0.0f));
-    cube_base_trans[4] = glm::scale(cube_base_trans[4], glm::vec3(20.0f, 0.5f, 20.0f));
+    cube_base_trans[4] = glm::scale(cube_base_trans[4],glm::vec3(100.0f, 0.5f, 100.0f));
+  //  cube_base_trans[0] = glm::translate(glm::mat4(1.0f), glm::vec3(15.0f, 0.0f, 0.0f));
+  //  cube_base_trans[0] = glm::scale(cube_base_trans[0], glm::vec3(5.0f, 2.5f, 20.0f));
+  //  cube_base_trans[1] = glm::translate(glm::mat4(1.0f), glm::vec3(-5.0f, 0.0f, -15.0f));
+  //  cube_base_trans[1] = glm::scale(cube_base_trans[1], glm::vec3(15.0f, 2.5f, 5.0f));
+  //  cube_base_trans[2] = glm::translate(glm::mat4(1.0f), glm::vec3(-5.0f, 0.0f, 15.0f));
+  //  cube_base_trans[2] = glm::scale(cube_base_trans[2], glm::vec3(15.0f, 2.5f, 5.0f));
+  //  cube_base_trans[3] = glm::translate(glm::mat4(1.0f), glm::vec3(-15.0f, 0.0f, 0.0f));
+  //  cube_base_trans[3] = glm::scale(cube_base_trans[3], glm::vec3(5.0f, 2.5f, 10.0f));
+  //  cube_base_trans[4] = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.5f, 0.0f));
+  //  cube_base_trans[4] = glm::scale(cube_base_trans[4], glm::vec3(20.0f, 0.5f, 20.0f));
 
-    cube_deco_trans[0] = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, -4.0f));
-    cube_deco_trans[0] = glm::scale(cube_deco_trans[0], glm::vec3(2.5f, 2.5f, 2.5f));
-    cube_deco_trans[1] = glm::translate(glm::mat4(1.0f), glm::vec3(-15.0f, 5.0f, 4.0f));
-    cube_deco_trans[1] = glm::scale(cube_deco_trans[1], glm::vec3(2.5f, 2.5f, 2.5f));
+  //  cube_deco_trans[0] = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, -4.0f));
+  //  cube_deco_trans[0] = glm::scale(cube_deco_trans[0], glm::vec3(2.5f, 2.5f, 2.5f));
+  //  cube_deco_trans[1] = glm::translate(glm::mat4(1.0f), glm::vec3(-15.0f, 5.0f, 4.0f));
+  //  cube_deco_trans[1] = glm::scale(cube_deco_trans[1], glm::vec3(2.5f, 2.5f, 2.5f));
 
     water_trans = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, 0.0f));
-    water_trans = glm::scale(water_trans, glm::vec3(20.0f, 20.0f, 20.0f));
+    water_trans = glm::scale(water_trans, glm::vec3(100.0f, 20.0f, 100.0f));
+   // water_trans = glm::scale(water_trans, glm::vec3(20.0f, 20.0f, 20.0f));
     glClearColor(0.3f, 0.6f, 1.0f, 1.0f);
     //framebuffers
     framebuffer_refraction = new Framebuffer();
