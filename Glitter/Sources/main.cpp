@@ -36,6 +36,32 @@
 #include<Cube.hpp>
 #include<particle.hpp>
 
+//foamheaders
+#include <vector>
+float currentFrame;
+//foam
+int max_length = 512;
+
+unsigned   _MainTex;
+glm::vec4      _MainTex_ST;
+unsigned  _NoiseTex;
+float       _AlphaDelay;
+float       _Speed;
+float       _Time;//自从程序开始经过的时间
+float       _WaveRange;
+float       _Layer1OffsetX;
+float       _Layer2OffsetX;
+float       _Layer3OffsetX;
+float       _Layer1OffsetY;
+float       _Layer2OffsetY;
+float       _Layer3OffsetY;
+unsigned VAO_foam = 0;
+unsigned VBO_foam = 0;
+unsigned EBO_foam = 0;
+std::vector<float> Vertices;
+std::vector<int> Indices;
+void initfoam(Shader* foamShader);
+void renderFoam(Shader*foamShader);
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -45,7 +71,7 @@ unsigned int loadTexture(std::vector<std::string> faces);
 unsigned int loadTexture(char const* path);
 void initGL();
 void initWaterPart(Shader* cubeShader,Shader* waterShader,Shader* quadShader);
-void renderwater(Shader* ourShader, Model* fishModel, Shader* shaderBlur,Model_obj* boatModel,Model_obj* indoorModel,Shader* boatShader,  Shader* blendingShader, Shader* skyboxShader) ;
+void renderwater(Shader* ourShader, Model* fishModel, Shader* shaderBlur,Model_obj* boatModel,Model_obj* indoorModel,Shader* boatShader,  Shader* blendingShader, Shader* skyboxShader,Shader* foamShader) ;
 unsigned int loadTransparentTexture(char const* path);
 glm::vec3 sin_(float angle, float speed, float height);
 void drawBoat();
@@ -234,6 +260,7 @@ int main()
     Shader skyboxShader("../Glitter/Shaders/6.1.skybox.vs", "../Glitter/Shaders/6.1.skybox.fs");
     Shader cubeShader("../Glitter/Shaders/cube.vs", "../Glitter/Shaders/cube.fs");
     Shader waterShader("../Glitter/Shaders/water_vshader.glsl", "../Glitter/Shaders/water_fshader.glsl");
+    Shader foamShader("../Glitter/Shaders/foam.vs", "../Glitter/Shaders/foam.fs");
     Shader quadShader("../Glitter/Shaders/quad_screen_vshader.glsl", "../Glitter/Shaders/quad_screen_fshader.glsl");
     // load models
     // -----------
@@ -474,7 +501,7 @@ int main()
     shaderBlur.use();
     shaderBlur.setInt("image", 0);
 
-
+    initfoam(&foamShader);
     //glm::mat4 ViewProjectionMatrix = camera.GetViewMatrix() * projection;
     // render loop
     // -----------
@@ -486,7 +513,7 @@ int main()
 
 
         // per-frame time logic
-        float currentFrame = static_cast<float>(glfwGetTime());
+        currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
         // input
@@ -959,7 +986,7 @@ int main()
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glEnable(GL_DEPTH_TEST);
 
-        renderwater(&ourShader, &fishModel, &shaderBlur,&boatModel,&indoorModel,&boatShader,&blendingShader,&skyboxShader);
+        renderwater(&ourShader, &fishModel, &shaderBlur,&boatModel,&indoorModel,&boatShader,&blendingShader,&skyboxShader,&foamShader);
 
        
         glfwPollEvents();
@@ -1122,6 +1149,90 @@ unsigned int loadTexture(std::vector<std::string> faces)
 
     return textureID;
 }
+
+void initfoam(Shader *foamShader) {
+#define PI 3.1415926535
+    //foam
+    float a = 4;
+    float b = 3;
+
+    for (int i = 0; i <= max_length; i++)
+    {
+        for (int j = 0; j <= max_length; j++)
+        {
+            Vertices.push_back(std::cos((float)j / (float)max_length * 2.0f * PI) * ((float)i / (float)max_length) * a);
+            Vertices.push_back(0.0f);
+            Vertices.push_back(std::sin((float)j / (float)max_length * 2.0f * PI) * ((float)i / (float)max_length) * b);
+
+
+            Vertices.push_back(float(i) / max_length);
+            Vertices.push_back(float(j) / max_length);
+
+            Indices.push_back(i * max_length + 5 * j);
+            Indices.push_back((i + 1) * max_length + 5 * j);
+            Indices.push_back((i + 1) * max_length + 1 + 5 * j);
+            Indices.push_back(i * max_length + 5 * j);
+            Indices.push_back((i + 1) * max_length + 1 + 5 * j);
+            Indices.push_back(i * max_length + 1 + 5 * j);
+
+        }
+    }
+    glGenVertexArrays(1, &VAO_foam);
+    glGenBuffers(1, &VBO_foam);
+
+    glBindVertexArray(VAO_foam);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_foam);
+    glBufferData(GL_ARRAY_BUFFER, Vertices.size() * sizeof(float), &Vertices[0], GL_STATIC_DRAW);
+
+    glGenBuffers(1, &EBO_foam);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_foam);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, Indices.size() * sizeof(int), &Indices[0], GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    // texture coord attribute
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+
+
+    glGenTextures(1, &_MainTex);
+    glGenTextures(1, &_NoiseTex);
+    _MainTex = loadTexture("../Glitter/objects/浪花贴图.png");
+    _NoiseTex = loadTexture("../Glitter/objects/躁波贴图.png");
+    foamShader->use();
+    foamShader->setVec4("_MainTex_ST", glm::vec4(1.0f, 1.0f, 0.0f, 0.0f));
+    foamShader->setVec4("_Mask_ST", glm::vec4(1.0f, 1.0f, 0.0f, 0.0f));
+    foamShader->setFloat("_AlphaDelay", 0.5f);
+    foamShader->setFloat("_Speed", 0.8f);
+    foamShader->setVec4("_TintColor", glm::vec4(0.0, 0.1, 0.1, 1.0));
+    foamShader->setFloat("_WaveRange", 0.4f);//波动的幅度
+   
+    foamShader->setFloat("_Layer1OffsetX", 0.0f);
+    foamShader->setFloat("_Layer2OffsetX", 0.3f);
+    foamShader->setFloat("_Layer3OffsetX", 0.6f);
+    foamShader->setFloat("_Layer1OffsetY", 0.0f);
+    foamShader->setFloat("_Layer2OffsetY", 0.3f);
+    foamShader->setFloat("_Layer3OffsetY", 0.6f);
+    foamShader->setInt("tessLevel", 1);
+    srand((unsigned)time(NULL));
+}
+void renderFoam(Shader* foamShader)
+{
+    foamShader->use();
+
+    foamShader->setInt("_MainTex", 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, _MainTex);
+
+    glBindVertexArray(VAO_foam);
+    glDrawElements(GL_TRIANGLES, max_length * max_length * 6, GL_UNSIGNED_INT, 0);
+
+    glBindVertexArray(0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+}
+
 void initWaterPart(Shader* cubeShader, Shader* waterShader, Shader* quadShader) {
     for (size_t i = 0; i < 5; i++) {
         cube_base[i].Init(cubeShader);
@@ -1227,7 +1338,7 @@ unsigned int loadTexture(char const* path)
     return textureID;
 }
 
-void renderwater(Shader* ourShader, Model* fishModel, Shader* shaderBlur, Model_obj* boatModel, Model_obj* indoorModel, Shader* boatShader,Shader* blendingShader,Shader* skyboxShader) {
+void renderwater(Shader* ourShader, Model* fishModel, Shader* shaderBlur, Model_obj* boatModel, Model_obj* indoorModel, Shader* boatShader,Shader* blendingShader,Shader* skyboxShader,Shader* foamShader) {
     water.set_effect(water_effect);
     water.SetGussPingPongTexture(pingpongColorbuffers[1]);
     water.SetGussPingPong_2Texture(colorBuffers[0]);
@@ -1334,7 +1445,16 @@ void renderwater(Shader* ourShader, Model* fishModel, Shader* shaderBlur, Model_
         Drawable_list[i]->Draw();
     }
 
-
+    //glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    glm::mat4 view = camera.GetViewMatrix();
+    //glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(glm::mat4(1.0f),glm::vec3(0,3,0));
+    model = glm::scale(model, glm::vec3(10.0,1,10.0));
+    foamShader->use();
+    foamShader->setFloat("_Time", currentFrame);
+    foamShader->setMat4("mvp", projection * view * model);
+    foamShader->setFloat("_NoiseRange", float(rand() % 50) / 1000);
+    renderFoam(foamShader);
 
     vector<glm::vec3> windows
     {
@@ -1379,7 +1499,7 @@ void renderwater(Shader* ourShader, Model* fishModel, Shader* shaderBlur, Model_
 
     //skybox///////////////////////////////////////////////////////////
        // draw skybox as last
-    glm::mat4 view = camera.GetViewMatrix();
+    view = camera.GetViewMatrix();
     glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
     skyboxShader->use();
     view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
