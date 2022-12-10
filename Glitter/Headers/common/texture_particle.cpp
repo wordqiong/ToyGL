@@ -3,7 +3,7 @@
 #include <string.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include<texture_particle.h>
+#include "common/texture_particle.hpp"
 
 GLuint loadBMP_custom(const char * imagepath){
 

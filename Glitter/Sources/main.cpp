@@ -45,10 +45,11 @@ unsigned int loadTexture(std::vector<std::string> faces);
 unsigned int loadTexture(char const* path);
 void initGL();
 void initWaterPart(Shader* cubeShader,Shader* waterShader,Shader* quadShader);
-void renderwater(Shader* ourShader, Model* ourModel, Shader* shaderBlur,Model_obj* boatModel,Model_obj* indoorModel,Shader* boatShader,  Shader* blendingShader);
+void renderwater(Shader* ourShader, Model* fishModel, Shader* shaderBlur,Model_obj* boatModel,Model_obj* indoorModel,Shader* boatShader,  Shader* blendingShader);
 unsigned int loadTransparentTexture(char const* path);
+glm::vec3 sin_(float angle, float speed, float height);
 void drawBoat();
-
+unsigned int loadCubemap(vector<std::string> faces);
 glm::vec3 pointLightPositions[] = {
 glm::vec3(0.7f,  0.2f,  2.0f),
 glm::vec3(2.3f, -3.3f, -4.0f),
@@ -57,7 +58,47 @@ glm::vec3(0.0f,  0.0f, -3.0f)
 };
 
 
+glm::vec3 sin_(float angle, float speed, float height)
+{
+    glm::vec3 pos;
+    pos.x = 0;
+    pos.y = height*sin(angle * speed / 180 * 3.14);
+    pos.z = 0;
 
+    return pos;
+}
+
+unsigned int loadCubemap(vector<std::string> faces)
+{
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+    int width, height, nrChannels;
+    for (unsigned int i = 0; i < faces.size(); i++)
+    {
+        unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+        if (data)
+        {
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
+            );
+            stbi_image_free(data);
+        }
+        else
+        {
+            std::cout << "Cubemap texture failed to load at path: " << faces[i] << std::endl;
+            stbi_image_free(data);
+        }
+    }
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    return textureID;
+}
 
 //window
 GLFWwindow* window;
@@ -173,22 +214,31 @@ int main()
     Shader shaderBlur("../Glitter/Shaders/7.blur.vs", "../Glitter/Shaders/7.blur.fs");
     Shader shaderBloomFinal("../Glitter/Shaders/7.bloom_final.vs", "../Glitter/Shaders/7.bloom_final.fs");
     Shader blendingShader("../Glitter/blending.vs", "../Glitter/blending.fs");
-
-    //watershader
+    Shader skyboxShader("../Glitter/Shaders/6.1.skybox.vs", "../Glitter/Shaders/6.1.skybox.fs");
     Shader cubeShader("../Glitter/Shaders/cube.vs", "../Glitter/Shaders/cube.fs");
     Shader waterShader("../Glitter/Shaders/water_vshader.glsl", "../Glitter/Shaders/water_fshader.glsl");
     Shader quadShader("../Glitter/Shaders/quad_screen_vshader.glsl", "../Glitter/Shaders/quad_screen_fshader.glsl");
     // load models
     // -----------
-    //Model ourModel("../Glitter/objects/nanosuit.obj");
-    Model ourModel("../Glitter/objects/final/Guppy.fbx");
-    Shader boatShader("../Glitter/Shaders/2.model_loading.vs", "../Glitter/Shaders/2.model_loading.fs");
 
+
+    Shader boatShader("../Glitter/Shaders/2.model_loading.vs", "../Glitter/Shaders/2.model_loading.fs");
     Model_obj boatModel("../Glitter/objects/boat/boat.obj");
     Model_obj indoorModel("../Glitter/objects/indoor/indoor.obj");
 
-    Animation Animation("../Glitter/objects/final/Guppy.fbx", &ourModel);
-    Animator animator(&Animation);
+
+
+    Model fishModel("../Glitter/objects/new_fish/fish.fbx");
+    Model fishModel_2("../Glitter/objects/new_fish/fish2.fbx");
+    Model fishModel_3("../Glitter/objects/new_fish/fish3.fbx");
+    Animation animation("../Glitter/objects/new_fish/fish.fbx", &fishModel);
+    Animator animator(&animation);
+
+    
+
+    /*Model fishModel("C:/Users/Iris/Desktop/fish_rain.FBX");
+    Animation Animation("C:/Users/Iris/Desktop/fish_rain.FBX", &fishModel);
+    Animator animator(&Animation);*/
 
     float transparentVertices[] = {
         // positions         // texture Coords (swapped y coordinates because texture is flipped upside down)
@@ -201,10 +251,74 @@ int main()
         1.0f,  0.5f,  0.0f,  1.0f,  0.0f
     };
 
+    float skyboxVertices[] = {
+        // positions          
+        -1.0f,  1.0f, -1.0f,
+        -1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
 
+        -1.0f, -1.0f,  1.0f,
+        -1.0f, -1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f,  1.0f,
+        -1.0f, -1.0f,  1.0f,
 
+         1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
 
-    unsigned int VBO, cubeVAO;
+        -1.0f, -1.0f,  1.0f,
+        -1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f, -1.0f,  1.0f,
+        -1.0f, -1.0f,  1.0f,
+
+        -1.0f,  1.0f, -1.0f,
+         1.0f,  1.0f, -1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+        -1.0f,  1.0f,  1.0f,
+        -1.0f,  1.0f, -1.0f,
+
+        -1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f,  1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f,  1.0f,
+         1.0f, -1.0f,  1.0f
+    };
+
+    // skybox VAO
+    unsigned int skyboxVAO, skyboxVBO;
+    glGenVertexArrays(1, &skyboxVAO);
+    glGenBuffers(1, &skyboxVBO);
+    glBindVertexArray(skyboxVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+
+    vector<std::string> faces
+    {
+        "../Glitter/objects/skybox/right.jpg",
+        "../Glitter/objects/skybox/left.jpg",
+        "../Glitter/objects/skybox/top.jpg",
+        "../Glitter/objects/skybox/bottom.jpg",
+        "../Glitter/objects/skybox/front.jpg",
+        "../Glitter/objects/skybox/back.jpg"
+
+    };
+    unsigned int cubemapTexture = loadCubemap(faces);
+
+    //unsigned int VBO, cubeVAO;
 
     glGenFramebuffers(1, &hdrFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
@@ -360,6 +474,7 @@ int main()
     // -----------
     lastFrame= static_cast<float>(glfwGetTime());
 
+    
     while (!glfwWindowShouldClose(window))
     {
 
@@ -374,7 +489,7 @@ int main()
         animator.UpdateAnimation(deltaTime);
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, -0.4f, 0.0f)); // translate it down so it's at the center of the scene
-        model = glm::scale(model, glm::vec3(.01f, .01f, .01f));	// it's a bit too big for our scene, so scale it down
+        //model = glm::scale(model, glm::vec3(.01f, .01f, .01f));	// it's a bit too big for our scene, so scale it down
 
 
 
@@ -688,64 +803,23 @@ int main()
         boatShader.setMat4("model", model);
         indoorModel.Draw(boatShader);
 
-        //glEnable(GL_BLEND);
-        //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        //glGenVertexArrays(1, &transparentVAO);
-        //glGenBuffers(1, &transparentVBO);
-        //glBindVertexArray(transparentVAO);
-        //glBindBuffer(GL_ARRAY_BUFFER, transparentVBO);
-        //glBufferData(GL_ARRAY_BUFFER, sizeof(transparentVertices), transparentVertices, GL_STATIC_DRAW);
-        //glEnableVertexAttribArray(0);
-        //glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-        //glEnableVertexAttribArray(1);
-        //glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-        //glBindVertexArray(0);
-
-
-
-
-        //blendingShader.use();
-        //blendingShader.setInt("texture1", 0);
-
-   
-        //for (unsigned int i = 0; i < windows.size(); i++)
-        //{
-        //    float distance = glm::length(camera.Position - windows[i]);
-        //    sorted[distance] = windows[i];
-        //}
-
-        ////glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        ////glm::mat4 view = camera.GetViewMatrix();
-        ////glm::mat4 model = glm::mat4(1.0f);
-        //blendingShader.setMat4("projection", projection);
-        //blendingShader.setMat4("view", camera.GetViewMatrix());
-
-        //glBindVertexArray(transparentVAO);
-        //glBindTexture(GL_TEXTURE_2D, transparentTexture);
-        //for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
-        //{
-        //    model = glm::mat4(1.0f);
-        //    model = glm::translate(model, it->second);
-        //    model = glm::scale(model, glm::vec3(0.2f));
-        //    //model = glm::translate(model, lightPos);
-        //    blendingShader.setMat4("model", model);
-        //    glDrawArrays(GL_TRIANGLES, 0, 6);
-        //}
-        
-        model = glm::mat4(1.0f);
+        /*model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, -0.4f, 0.0f)); // translate it down so it's at the center of the scene
-        model = glm::scale(model, glm::vec3(.01f, .01f, .01f));	// it's a bit too big for our scene, so scale it down
+        model = glm::scale(model, glm::vec3(.01f, .01f, .01f));	// it's a bit too big for our scene, so scale it down*/
 
         ourShader.use();
         initModel(&ourShader);
+
+
         //
         auto transforms = animator.GetFinalBoneMatrices();
         for (int i = 0; i < transforms.size(); ++i)
             ourShader.setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
+
          ourShader.setMat4("model", model);
         //
-        ourModel.Draw(ourShader);
+        
 
 
 
@@ -754,12 +828,108 @@ int main()
 
 
         ////泛光收尾函数
+        //glm::mat4 model = glm::mat4(1.0f);
+        model  = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, -5.0f, 0.0f)); // translate it down so it's at the center of the scene       
+        model = glm::scale(model, glm::vec3(.1f, .1f, .1f));	// it's a bit too big for our scene, so scale it down  
+
+        model = glm::translate(model, sin_(glfwGetTime() + 9, 100, 10));
+        model = glm::translate(model, glm::vec3(200.8f, 0.0f, 20.0f));
+        model = glm::translate(model, glm::vec3(-6 * glfwGetTime(), 0.0f, 0.0f));
+        ourShader.setMat4("model", model);
+        fishModel.Draw(ourShader);
+
+        model = glm::translate(model, glm::vec3(50.0f, 0.0f, -20.0f));
+        fishModel.Draw(ourShader);
+
+        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 40.0f));
+        ourShader.setMat4("model", model);
+        fishModel.Draw(ourShader);
+
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        glm::mat4 model_2 = glm::mat4(1.0f);
+        model_2 = glm::translate(model_2, glm::vec3(17.5f, -5.0f, 0.0f));
+        model_2 = glm::scale(model_2, glm::vec3(.1f, .1f, .1f));
+        model_2 = glm::translate(model_2, glm::vec3(-3*glfwGetTime(), 0.0f, 0.0f));  
+        model_2 = glm::translate(model_2, sin_(glfwGetTime()+4,40,35));
+        ourShader.setMat4("model", model_2);
+        fishModel_2.Draw(ourShader);
+
+        glm::mat4 model_7 = glm::mat4(1.0f);
+        model_7 = glm::translate(model_7, glm::vec3(16.0f, -5.0f, 0.0f));
+        model_7 = glm::scale(model_7, glm::vec3(.1f, .1f, .1f));
+        model_7 = glm::translate(model_7, glm::vec3(-3 * glfwGetTime(), 0.0f, -3.0f));
+        model_7 = glm::translate(model_7, sin_(glfwGetTime()+2, 50, 30));
+        ourShader.setMat4("model", model_7);
+        fishModel_2.Draw(ourShader);
+
+        glm::mat4 model_8 = glm::mat4(1.0f);
+        model_8 = glm::translate(model_8, glm::vec3(14.0f, -5.0f, 0.0f));
+        model_8 = glm::scale(model_8, glm::vec3(.1f, .1f, .1f));
+        model_8 = glm::translate(model_8, glm::vec3(-3 * glfwGetTime(), 0.0f, -7.0f));
+        model_8 = glm::translate(model_8, sin_(glfwGetTime() + 5, 60, 25));
+        ourShader.setMat4("model", model_8);
+        fishModel_2.Draw(ourShader);
+
+        glm::mat4 model_9 = glm::mat4(1.0f);
+        model_9 = glm::translate(model_9, glm::vec3(15.5f, -5.0f, 0.0f));
+        model_9 = glm::scale(model_9, glm::vec3(.1f, .1f, .1f));
+        model_9 = glm::translate(model_9, glm::vec3(-3 * glfwGetTime(), 0.0f, -10.0f));
+        model_9 = glm::translate(model_9, sin_(glfwGetTime()+7, 70, 20));
+        ourShader.setMat4("model", model_9);
+        fishModel_2.Draw(ourShader);
+
+        glm::mat4 model_10 = glm::mat4(1.0f);
+        model_10 = glm::translate(model_10, glm::vec3(16.8f, -5.0f, -5.0f));
+        model_10 = glm::scale(model_10, glm::vec3(.1f, .1f, .1f));
+        model_10 = glm::translate(model_10, glm::vec3(-3 * glfwGetTime(), 0.0f, 0.0f));
+        model_10 = glm::translate(model_10, sin_(glfwGetTime()+3, 100, 10));
+        ourShader.setMat4("model", model_10);
+        fishModel_2.Draw(ourShader);
+
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        glm::mat4 model_3 = glm::mat4(1.0f);
+        model_3 = model;
+        model_3 = glm::translate(model_3, glm::vec3(150.8f, 0.0f, 20.0f));
+        model_3 = glm::translate(model_3, glm::vec3(-3 * glfwGetTime(), 0.0f, 0.0f));
+        model_3 = glm::translate(model_3, sin_(glfwGetTime()+3, 100, 40));
+        ourShader.setMat4("model", model_3);
+        fishModel_3.Draw(ourShader);
+
+        glm::mat4 model_4 = glm::mat4(1.0f);
+        model_4 = model;
+        model_4 = glm::translate(model_4, glm::vec3(150.8f, 0.0f, -40.0f));
+        model_4 = glm::translate(model_4, glm::vec3(-3 * glfwGetTime(), 0.0f, 0.0f));
+        model_4 = glm::translate(model_4, sin_(glfwGetTime()+6, 60, 30));
+        ourShader.setMat4("model", model_4);
+        fishModel_3.Draw(ourShader);
+
+        glm::mat4 model_5 = glm::mat4(1.0f);
+        model_5 = model;
+        model_5 = glm::translate(model_5, glm::vec3(200.8f, 0.0f, 10.0f));
+        model_5 = glm::translate(model_5, glm::vec3(-3 * glfwGetTime(), 0.0f, 0.0f));
+        model_5 = glm::translate(model_5, sin_(glfwGetTime()+ 10, 70, 35));
+        ourShader.setMat4("model", model_5);
+        fishModel_3.Draw(ourShader);
+
+        glm::mat4 model_6 = glm::mat4(1.0f);
+        model_6 = model;
+        model_6 = glm::translate(model_6, glm::vec3(175.8f, 0.0f, 20.0f));
+        model_6 = glm::translate(model_6, glm::vec3(-3 * glfwGetTime(), 0.0f, 0.0f));
+        model_6 = glm::translate(model_6, sin_(glfwGetTime() + 10, 80, 45));
+        ourShader.setMat4("model", model_6);
+        fishModel_3.Draw(ourShader);
+
+
+
+        ////������β����
+
         glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
         glStencilMask(0x00);
         glDisable(GL_DEPTH_TEST);
         ourShaderSingle.use();
         initModel(&ourShaderSingle);
-        ourModel.Draw(ourShaderSingle);
+        fishModel.Draw(ourShaderSingle);
         glBindVertexArray(0);
         glStencilMask(0xFF);
         glStencilFunc(GL_ALWAYS, 0, 0xFF);
@@ -782,8 +952,25 @@ int main()
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glEnable(GL_DEPTH_TEST);
-        renderwater(&ourShader, &ourModel, &shaderBlur,&boatModel,&indoorModel,&boatShader,&blendingShader);
 
+        renderwater(&ourShader, &fishModel, &shaderBlur,&boatModel,&indoorModel,&boatShader,&blendingShader);
+
+        //skybox///////////////////////////////////////////////////////////
+        // draw skybox as last
+        glm::mat4 view = camera.GetViewMatrix();
+        glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
+        skyboxShader.use();
+        view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
+        skyboxShader.setMat4("view", view);
+        skyboxShader.setMat4("projection", projection);
+        // skybox cube
+        glBindVertexArray(skyboxVAO);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
+        glDepthFunc(GL_LESS); // set depth function back to default
+        ///////////////////////////////////////////////////////////
         glfwPollEvents();
         glfwSwapBuffers(window);
     }
@@ -1049,7 +1236,7 @@ unsigned int loadTexture(char const* path)
     return textureID;
 }
 
-void renderwater(Shader* ourShader, Model* ourModel, Shader* shaderBlur, Model_obj* boatModel, Model_obj* indoorModel, Shader* boatShader,Shader* blendingShader) {
+void renderwater(Shader* ourShader, Model* fishModel, Shader* shaderBlur, Model_obj* boatModel, Model_obj* indoorModel, Shader* boatShader,Shader* blendingShader) {
     water.set_effect(water_effect);
     water.SetGussPingPongTexture(pingpongColorbuffers[1]);
     water.SetGussPingPong_2Texture(colorBuffers[0]);
@@ -1133,7 +1320,7 @@ void renderwater(Shader* ourShader, Model* ourModel, Shader* shaderBlur, Model_o
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     //ourShader->use();
     //initModel(ourShader);
-    //ourModel->Draw(*ourShader);
+    //fishModel->Draw(*ourShader);
     glBindTexture(GL_TEXTURE_2D, boatTexture);
     boatShader->use();
     initModel(boatShader);

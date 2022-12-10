@@ -268,7 +268,7 @@ void HL1MDLLoader::validate_header(const Header_HL1 *header, bool is_texture_hea
 
     Due to the way StudioMDL works (tool used to compile SMDs into MDLs),
     it is assumed that an external texture file follows the naming
-    convention: <YourModelName>T.mdl. Note the extra (T) at the end of the
+    convention: <YfishModelName>T.mdl. Note the extra (T) at the end of the
     model name.
 
     .e.g For a given model named MyModel.mdl
@@ -301,7 +301,7 @@ void HL1MDLLoader::load_texture_file() {
 
     Due to the way StudioMDL works (tool used to compile SMDs into MDLs),
     it is assumed that a sequence group file follows the naming
-    convention: <YourModelName>0X.mdl. Note the extra (0X) at the end of
+    convention: <YfishModelName>0X.mdl. Note the extra (0X) at the end of
     the model name, where (X) is the sequence group.
 
     .e.g For a given model named MyModel.mdl
