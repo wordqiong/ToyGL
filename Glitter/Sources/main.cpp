@@ -139,8 +139,8 @@ GLFWwindow* window;
 QuadScreen quad_screen;
 
 // settings
-const unsigned int SCR_WIDTH = 1600;
-const unsigned int SCR_HEIGHT = 1200;
+const unsigned int SCR_WIDTH = 800;
+const unsigned int SCR_HEIGHT = 600;
 
 // camera
 Camera camera(glm::vec3(0.0f, 2.5f, 2.0f));
@@ -837,7 +837,7 @@ int main()
 
         glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
         glEnable(GL_DEPTH_TEST); // enable depth testing (is disabled for rendering screen-space quad)
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClearColor(0.01f, 0.01f, 0.01f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); // don't forget to clear the stencil buffer!
         glStencilMask(0x00);
         glStencilFunc(GL_ALWAYS, 1, 0xFF);
@@ -859,12 +859,12 @@ int main()
         boatShader.setMat4("model", model);
         boatModel.Draw(boatShader);
        // // render the loaded model
-       // model = glm::mat4(1.0f);
-       // updateModelMatrix(&model, glm::vec3(0.0f, 0.0f, 0.0f));
-       // model = glm::translate(model, glm::vec3((baseX + 0.4f), (baseY - 1.1f), (baseZ + 1.42f))); 
-       // model = glm::scale(model, glm::vec3(3.4f));	// it's a bit too big for our scene, so scale it down
-       //boatShader.setMat4("model", model);
-       // indoorModel.Draw(boatShader);
+       model = glm::mat4(1.0f);
+       updateModelMatrix(&model, glm::vec3(0.0f, 0.0f, 0.0f));
+       model = glm::translate(model, glm::vec3((baseX + 0.4f), (baseY - 1.1f), (baseZ + 1.42f))); 
+       model = glm::scale(model, glm::vec3(3.4f));	// it's a bit too big for our scene, so scale it down
+       boatShader.setMat4("model", model);
+       indoorModel.Draw(boatShader);
 
 
 
