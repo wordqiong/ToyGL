@@ -17,12 +17,12 @@
 //    vec2 uv4 ;//: TEXCOORD3;
 //};
 
-layout (location = 0) in vec3 aPos;
+layout (location = 0) in vec4 aPos;
 layout (location = 1) in vec2 TexCoord;
 out vec2 uv1;
 out vec2 uv2;
 out vec2 uv3;
-//out float w;
+out float w;
 
 //外部变量声明
 uniform sampler2D   _MainTex;
@@ -64,7 +64,8 @@ vec2 DelayOffsetUV(vec2 uv, float offset, float offset_y)//输入UV 和偏移量（x，y
 //顶点着色器
 void main()
 {
-    //w=aPos.w;
+    w=aPos.w;
+    //w=0.3;
     float x=aPos.x;
     float y=aPos.z;
     vec2 uv=  TexCoord;

@@ -21,7 +21,7 @@ uniform vec2 rand_num;
 in vec2 uv1;
 in vec2 uv2;
 in vec2 uv3;
-//in float w;
+in float w;
 
 out vec4 fragColor;
 
@@ -54,9 +54,9 @@ void main() //: SV_Target //参数为输入结构体，语义就是输出到什么地方
     vec4 c1 = texture(_MainTex, vec2(uv1.x,uv1.y));
     vec4 c2 = texture(_MainTex, vec2(uv2.x,uv2.y));
     vec4 c3 = texture(_MainTex, vec2(uv3.x,uv3.y));
-    c1.w=0.3;
-    c2.w=0.3;
-    c3.w=0.3;
+    c1.w=w;
+    c2.w=w;
+    c3.w=w;
     //layer1 + layer2
     vec4 c12 = TwoColorBlend(c1,c2);
     //layer12 + layer3

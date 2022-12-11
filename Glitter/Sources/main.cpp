@@ -249,7 +249,20 @@ int FindUnusedParticle() {
 void SortParticles() {
     std::sort(&ParticlesContainer[0], &ParticlesContainer[MaxParticles]);
 }
+void updateModelMatrix(glm::mat4* modelMatrix, glm::vec3 modelPos) {
+    // 计算模型的当前位置
+    // 定义模型上下移动的幅度
+    float amplitude = 0.2f;
 
+    // 定义模型上下移动的频率（单位：赫兹）
+    float frequency = 1.0f;
+    float time = glfwGetTime();
+    float y = amplitude * sin(time * frequency);
+    glm::vec3 translate = glm::vec3(0.0f, y, 0.0f);
+
+    // 设置模型的变换矩阵
+    *modelMatrix = glm::translate(*modelMatrix, (modelPos) + translate);
+}
 int main()
 {
     
@@ -512,7 +525,7 @@ int main()
     shaderBlur.use();
     shaderBlur.setInt("image", 0);
 
-    //initfoam(&foamShader);
+    initfoam(&foamShader);
 
     //glm::mat4 ViewProjectionMatrix = camera.GetViewMatrix() * projection;
     // render loop
@@ -738,17 +751,18 @@ int main()
         glEnable(GL_DEPTH_TEST);
         // render the loaded model
         model = glm::mat4(1.0f);
+        updateModelMatrix(&model, glm::vec3(0.0f, 0.0f, 0.0f));
         model = glm::translate(model, glm::vec3(baseX, baseY, baseZ)); // translate it down so it's at the center of the scene
         model = glm::scale(model, glm::vec3(5.0f));	// it's a bit too big for our scene, so scale it down
-        
-       // model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
+       
         boatShader.setMat4("model", model);
         boatModel.Draw(boatShader);
         // render the loaded model
         model = glm::mat4(1.0f);
+        updateModelMatrix(&model, glm::vec3(0.0f, 0.0f, 0.0f));
         model = glm::translate(model, glm::vec3((baseX+0.4f), (baseY-1.1f), (baseZ+1.42f))); // translate it down so it's at the center of the scene
         model = glm::scale(model, glm::vec3(3.4f));	// it's a bit too big for our scene, so scale it down
-        
+ 
         boatShader.setMat4("model", model);
         indoorModel.Draw(boatShader);
 
@@ -803,6 +817,7 @@ int main()
         for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
         {
             model = glm::mat4(1.0f);
+            updateModelMatrix(&model, glm::vec3(0.0f, 0.0f, 0.0f));
             model = glm::translate(model, it->second);
             model = glm::scale(model, glm::vec3(0.2f));
             //model = glm::translate(model, lightPos);
@@ -836,18 +851,19 @@ int main()
         glEnable(GL_DEPTH_TEST);
         // render the loaded model
         model = glm::mat4(1.0f);
+        updateModelMatrix(&model, glm::vec3(0.0f, 0.0f, 0.0f));
+
         model = glm::translate(model, glm::vec3(baseX, baseY, baseZ)); // translate it down so it's at the center of the scene
         model = glm::scale(model, glm::vec3(5.0f));	// it's a bit too big for our scene, so scale it down
-        
-       
+   
         boatShader.setMat4("model", model);
         boatModel.Draw(boatShader);
         // render the loaded model
         model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3((baseX+0.4f), (baseY-1.1f), (baseZ+ 1.42f))); // translate it down so it's at the center of the scene
+        updateModelMatrix(&model, glm::vec3(0.0f, 0.0f, 0.0f));
+        model = glm::translate(model, glm::vec3((baseX + 0.4f), (baseY - 1.1f), (baseZ + 1.42f))); 
         model = glm::scale(model, glm::vec3(3.4f));	// it's a bit too big for our scene, so scale it down
-      
-        boatShader.setMat4("model", model);
+       boatShader.setMat4("model", model);
         indoorModel.Draw(boatShader);
 
 
@@ -1156,8 +1172,8 @@ unsigned int loadTexture(std::vector<std::string> faces)
 void initfoam(Shader* foamShader) {
 #define PI 3.1415926535
     //foam
-    float a = 1.0;
-    float b = 1.0;
+    float a = 1.5;
+    float b = 0.8;
 
     for (int i = 0; i <= max_length; i++)
     {
@@ -1166,12 +1182,12 @@ void initfoam(Shader* foamShader) {
             Vertices.push_back(std::cos((float)j / (float)max_length * 2.0f * PI) * ((float)i / (float)max_length) * a);
             Vertices.push_back(0.0f);
             Vertices.push_back(std::sin((float)j / (float)max_length * 2.0f * PI) * ((float)i / (float)max_length) * b);
-            /*if (i >= max_length - 20)
+            if (i >= max_length - 20)
             {
-                Vertices.push_back((max_length - i) * 0.3 / 20);
+                Vertices.push_back((max_length - i) * 0.1 / 20);
             }
             else
-                Vertices.push_back(0.3);*/
+                Vertices.push_back(0.1);
 
             Vertices.push_back(float(i) / max_length);
             Vertices.push_back(float(j) / max_length);
@@ -1196,16 +1212,16 @@ void initfoam(Shader* foamShader) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_foam);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, Indices.size() * sizeof(int), &Indices[0], GL_STATIC_DRAW);
 
-    /*glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
     // texture coord attribute
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(4 * sizeof(float)));
-    glEnableVertexAttribArray(1);*/
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    // texture coord attribute
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+    /* glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+     glEnableVertexAttribArray(0);
+     // texture coord attribute
+     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+     glEnableVertexAttribArray(1);*/
 
 
     glGenTextures(1, &_MainTex);
@@ -1217,9 +1233,9 @@ void initfoam(Shader* foamShader) {
     foamShader->setVec4("_Mask_ST", glm::vec4(1.0f, 1.0f, 0.0f, 0.0f));
     foamShader->setFloat("_AlphaDelay", 0.5f);
     foamShader->setFloat("_Speed", 0.8f);
-    foamShader->setVec4("_TintColor", glm::vec4(0.0, 0.1, 0.1, 1.0));
+    foamShader->setVec4("_TintColor", glm::vec4(0.2, 0.2, 0.4, 1.0));
     foamShader->setFloat("_WaveRange", 0.4f);//波动的幅度
-   
+
     foamShader->setFloat("_Layer1OffsetX", 0.3f);
     foamShader->setFloat("_Layer2OffsetX", 0.6f);
     foamShader->setFloat("_Layer3OffsetX", 0.9f);
@@ -1229,6 +1245,7 @@ void initfoam(Shader* foamShader) {
     foamShader->setInt("tessLevel", 1);
     srand((unsigned)time(NULL));
 }
+
 void renderFoam(Shader* foamShader)
 {
     glDisable(GL_CULL_FACE);
@@ -1536,9 +1553,10 @@ void renderwater(Shader* ourShader, Model* fishModel, Shader* shaderBlur, Model_
     boatShader->use();
     initModel(boatShader);
     model = glm::mat4(1.0f);
+    updateModelMatrix(&model, glm::vec3(0.0f, 0.0f, 0.0f));
+
     model = glm::translate(model, glm::vec3(baseX, baseY, baseZ)); // translate it down so it's at the center of the scene
     model = glm::scale(model, glm::vec3(5.0f));	// it's a bit too big for our scene, so scale it down
-    
     boatShader->setMat4("view", camera.GetReflectMatrix(3));
     // model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
     boatShader->setMat4("model", model);
@@ -1550,6 +1568,7 @@ void renderwater(Shader* ourShader, Model* fishModel, Shader* shaderBlur, Model_
     model = glm::mat4(1.0f);
     ourShader->setMat4("model", model);
     model = glm::mat4(1.0f);
+
     model = glm::translate(model, glm::vec3(0.0f, 1.0f, 0.0f)); // translate it down so it's at the center of the scene       
     model = glm::scale(model, glm::vec3(.1f, .1f, .1f));	// it's a bit too big for our scene, so scale it down  
 
@@ -1670,18 +1689,20 @@ void renderwater(Shader* ourShader, Model* fishModel, Shader* shaderBlur, Model_
     boatShader->use();
     initModel(boatShader);
     model = glm::mat4(1.0f);
+    updateModelMatrix(&model, glm::vec3(0.0f, 0.0f, 0.0f));
+
     model = glm::translate(model, glm::vec3(baseX, baseY, baseZ)); // translate it down so it's at the center of the scene
     model = glm::scale(model, glm::vec3(5.0f));	// it's a bit too big for our scene, so scale it down
-
-   // model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
+  // model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
     boatShader->setMat4("model", model);
     boatModel->Draw(*boatShader);
     // render the loaded model
     model = glm::mat4(1.0f);
+    updateModelMatrix(&model, glm::vec3(0.0f, 0.0f, 0.0f));
+
     model = glm::translate(model, glm::vec3((baseX + 0.4f), (baseY - 1.1f), (baseZ + 1.42f))); // translate it down so it's at the center of the scene
     model = glm::scale(model, glm::vec3(3.4f));	// it's a bit too big for our scene, so scale it down
-
-    boatShader->setMat4("model", model);
+   boatShader->setMat4("model", model);
     indoorModel->Draw(*boatShader);
 
     for (size_t i = 0; i < Drawable_list.size(); i++) {
@@ -1691,8 +1712,9 @@ void renderwater(Shader* ourShader, Model* fishModel, Shader* shaderBlur, Model_
     //glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
     glm::mat4 view = camera.GetViewMatrix();
     //glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(0.0, 0.0, 0.0));
-    model = glm::scale(model, glm::vec3(3.0,1,0.0));
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(0.0, 3.1, 0.0));
+    model = glm::scale(model, glm::vec3(5.0, 1.0, 5.0));
     foamShader->use();
     foamShader->setFloat("_Time", currentFrame);
     foamShader->setMat4("mvp", projection * view * model);
@@ -1733,6 +1755,7 @@ void renderwater(Shader* ourShader, Model* fishModel, Shader* shaderBlur, Model_
     for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
     {
         model = glm::mat4(1.0f);
+        updateModelMatrix(&model, glm::vec3(0.0f, 0.0f, 0.0f));
         model = glm::translate(model, it->second);
         model = glm::scale(model, glm::vec3(0.2f));
         //model = glm::translate(model, lightPos);
