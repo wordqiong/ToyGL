@@ -11,15 +11,18 @@ layout(location = 6) in vec4 weights;
 uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
+uniform vec4 clip_coord;
 
 const int MAX_BONES = 100;
 const int MAX_BONE_INFLUENCE = 4;
 uniform mat4 finalBonesMatrices[MAX_BONES];
 
 out vec2 TexCoords;
+out float gl_ClipDistance[1];
 
 void main()
 {
+    gl_ClipDistance[0] = dot(model*vec4(pos, 1.0), clip_coord);
     vec4 totalPosition = vec4(0.0f);
     for(int i = 0 ; i < MAX_BONE_INFLUENCE ; i++)
     {

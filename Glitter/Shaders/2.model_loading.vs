@@ -6,13 +6,16 @@ layout (location = 2) in vec2 aTexCoords;
 out vec3 FragPos;
 out vec3 Normal;
 out vec2 TexCoords;
+out float gl_ClipDistance[1];
 
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
+uniform vec4 clip_coord;
 
 void main()
 {
+     gl_ClipDistance[0] = dot(model*vec4(aPos, 1.0), clip_coord);
     FragPos = vec3(model * vec4(aPos, 1.0));
     Normal = mat3(transpose(inverse(model))) * aNormal;  
     TexCoords = aTexCoords;
