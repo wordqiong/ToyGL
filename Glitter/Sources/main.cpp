@@ -71,7 +71,7 @@ unsigned int loadTexture(std::vector<std::string> faces);
 unsigned int loadTexture(char const* path);
 void initGL();
 void initWaterPart(Shader* cubeShader,Shader* waterShader,Shader* quadShader);
-void renderwater(Shader* ourShader, Model* fishModel, Shader* shaderBlur,Model_obj* boatModel,Model_obj* indoorModel,Shader* boatShader,  Shader* blendingShader, Shader* skyboxShader,Shader* foamShader) ;
+void renderwater(Shader* ourShader, Model* fishModel, Shader* shaderBlur,Model_obj* boatModel,Model_obj* indoorModel,Shader* boatShader,  Shader* blendingShader, Shader* skyboxShader,Shader* foamShader, Animator *animator) ;
 unsigned int loadTransparentTexture(char const* path);
 glm::vec3 sin_(float angle, float speed, float height);
 void drawBoat();
@@ -986,7 +986,7 @@ int main()
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glEnable(GL_DEPTH_TEST);
 
-        renderwater(&ourShader, &fishModel, &shaderBlur,&boatModel,&indoorModel,&boatShader,&blendingShader,&skyboxShader,&foamShader);
+        renderwater(&ourShader, &fishModel, &shaderBlur,&boatModel,&indoorModel,&boatShader,&blendingShader,&skyboxShader,&foamShader,&animator);
 
        
         glfwPollEvents();
@@ -1350,7 +1350,7 @@ unsigned int loadTexture(char const* path)
     return textureID;
 }
 
-void renderwater(Shader* ourShader, Model* fishModel, Shader* shaderBlur, Model_obj* boatModel, Model_obj* indoorModel, Shader* boatShader,Shader* blendingShader,Shader* skyboxShader,Shader* foamShader) {
+void renderwater(Shader* ourShader, Model* fishModel, Shader* shaderBlur, Model_obj* boatModel, Model_obj* indoorModel, Shader* boatShader,Shader* blendingShader,Shader* skyboxShader,Shader* foamShader,Animator* animator ) {
     water.set_effect(water_effect);
     water.SetGussPingPongTexture(pingpongColorbuffers[1]);
     water.SetGussPingPong_2Texture(colorBuffers[0]);
@@ -1386,6 +1386,10 @@ void renderwater(Shader* ourShader, Model* fishModel, Shader* shaderBlur, Model_
         Drawable_list[i]->Draw();
     }
 
+
+
+
+
     framebuffer_refraction->unbind();
 
     depth_framebuffer->DrawFB(&Drawable_list);
@@ -1399,7 +1403,7 @@ void renderwater(Shader* ourShader, Model* fishModel, Shader* shaderBlur, Model_
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 
-    renderQuad();
+    //renderQuad();
     //use the different view matrix which is from under the water
     for (size_t i = 0; i < 5; i++) {
         cube_base[i].SetMVPMat(cube_base_trans[i], camera.GetReflectMatrix(2.0f), projection);
@@ -1414,6 +1418,50 @@ void renderwater(Shader* ourShader, Model* fishModel, Shader* shaderBlur, Model_
     for (size_t i = 0; i < Drawable_list.size(); i++) {
         Drawable_list[i]->Draw();
     }
+    boatShader->use();
+    initModel(boatShader);
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(baseX, baseY, baseZ)); // translate it down so it's at the center of the scene
+    model = glm::scale(model, glm::vec3(5.0f));	// it's a bit too big for our scene, so scale it down
+    boatShader->setMat4("view", camera.GetReflectMatrix(2));
+    // model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
+    boatShader->setMat4("model", model);
+    boatModel->Draw(*boatShader);
+
+
+    ourShader->use();
+    initModel(ourShader);
+
+
+    //
+    auto transforms = animator->GetFinalBoneMatrices();
+    for (int i = 0; i < transforms.size(); ++i)
+        ourShader->setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
+
+    ourShader->setMat4("model", model);
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(0.0f, 5.0f, 0.0f)); // translate it down so it's at the center of the scene       
+    model = glm::scale(model, glm::vec3(.1f, .1f, .1f));	// it's a bit too big for our scene, so scale it down  
+
+    model = glm::translate(model, sin_(glfwGetTime() + 9, 100, 10));
+    model = glm::translate(model, glm::vec3(200.8f, 0.0f, 20.0f));
+    model = glm::translate(model, glm::vec3(-6 * glfwGetTime(), 0.0f, 0.0f));
+    ourShader->setMat4("model", model);
+    
+    ourShader->setMat4("view", camera.GetReflectMatrix(2));
+    fishModel->Draw(*ourShader);
+
+    ourShader->setMat4("view", camera.GetReflectMatrix(2));
+    model = glm::translate(model, glm::vec3(50.0f, 0.0f, -20.0f));
+    fishModel->Draw(*ourShader);
+
+    ourShader->setMat4("view", camera.GetReflectMatrix(2));
+
+    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 40.0f));
+    ourShader->setMat4("model", model);
+    fishModel->Draw(*ourShader);
+
+
 
     glDisable(GL_CLIP_DISTANCE0);
     framebuffer_reflection->unbind();
@@ -1426,7 +1474,8 @@ void renderwater(Shader* ourShader, Model* fishModel, Shader* shaderBlur, Model_
     for (size_t i = 0; i < 2; i++) {
         cube_decoration[i].SetMVPMat(cube_deco_trans[i], camera.GetViewMatrix(), projection);
     }
-
+    boatShader->use();
+    initModel(boatShader);
     water.SetMVPMat(water_trans, camera.GetViewMatrix(), projection);
     //===============FINAL STEP
     //print to the real, color, multisample frambuffer
@@ -1438,7 +1487,7 @@ void renderwater(Shader* ourShader, Model* fishModel, Shader* shaderBlur, Model_
     glBindTexture(GL_TEXTURE_2D, boatTexture);
     boatShader->use();
     initModel(boatShader);
-    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(baseX, baseY, baseZ)); // translate it down so it's at the center of the scene
     model = glm::scale(model, glm::vec3(5.0f));	// it's a bit too big for our scene, so scale it down
 
