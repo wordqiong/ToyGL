@@ -18,10 +18,10 @@ uniform float       _Layer3OffsetY;
 
 uniform vec2 rand_num;
 
-in vec4 uv1;
-in vec4 uv2;
-in vec4 uv3;
-in vec2 uv4;
+in vec2 uv1;
+in vec2 uv2;
+in vec2 uv3;
+//in float w;
 
 out vec4 fragColor;
 
@@ -52,23 +52,11 @@ void main() //: SV_Target //参数为输入结构体，语义就是输出到什么地方
     
     //get rgb
     vec4 c1 = texture(_MainTex, vec2(uv1.x,uv1.y));
-    vec4 c2 = texture(_MainTex, vec2(uv1.z,uv1.w));
-    vec4 c3 = texture(_MainTex, vec2(uv2.x,uv2.y));
+    vec4 c2 = texture(_MainTex, vec2(uv2.x,uv2.y));
+    vec4 c3 = texture(_MainTex, vec2(uv3.x,uv3.y));
     c1.w=0.3;
     c2.w=0.3;
     c3.w=0.3;
-    //vec4 n1=texture(_Mask, GetDisappearAlpha(_Layer1OffsetX)*vec2(uv2.z,uv2.w) );
-    //vec4 n2=texture(_Mask, GetDisappearAlpha(_Layer2OffsetX)*vec2(uv3.x,uv3.y) );
-    //vec4 n3=texture(_Mask, GetDisappearAlpha(_Layer3OffsetX)*vec2(uv3.z,uv3.w) );
-    //c1=c1+n1;
-    //c2=c2+n2;
-    //c3=c3+n3;
-
-    //get alpha
-    //c1 = texture(_Mask, GetDisappearAlpha(_Layer1OffsetX)*vec2(uv2.z,uv2.w) );
-    //c2 = texture(_Mask, GetDisappearAlpha(_Layer2OffsetX)*vec2(uv3.x,uv3.y));
-    //c3 = texture(_Mask, GetDisappearAlpha(_Layer3OffsetX)*vec2(uv3.z,uv3.w) );
-
     //layer1 + layer2
     vec4 c12 = TwoColorBlend(c1,c2);
     //layer12 + layer3

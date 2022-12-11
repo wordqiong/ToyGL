@@ -19,10 +19,10 @@
 
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec2 TexCoord;
-out vec4 uv1;
-out vec4 uv2;
-out vec4 uv3;
-out vec2 uv4;
+out vec2 uv1;
+out vec2 uv2;
+out vec2 uv3;
+//out float w;
 
 //外部变量声明
 uniform sampler2D   _MainTex;
@@ -64,7 +64,7 @@ vec2 DelayOffsetUV(vec2 uv, float offset, float offset_y)//输入UV 和偏移量（x，y
 //顶点着色器
 void main()
 {
-
+    //w=aPos.w;
     float x=aPos.x;
     float y=aPos.z;
     vec2 uv=  TexCoord;
@@ -74,39 +74,16 @@ void main()
 
     //逐层偏移
     vec2 inuv = uv;//输入的uv
-    // layer1 uv offset 
+
     vec2 uv_tex1 = DelayOffsetUV(inuv, _Layer1OffsetX, _Layer1OffsetY);
-    //o.uv1.xy = TRANSFORM_TEX(uv_tex1, _MainTex);
-    vec2 temp1 = uv_tex1 * vec2(_MainTex_ST.x,_MainTex_ST.y) + vec2(_MainTex_ST.z,_MainTex_ST.w);
-    // layer1 uv offset 
+    uv1 = uv_tex1 * vec2(_MainTex_ST.x,_MainTex_ST.y) + vec2(_MainTex_ST.z,_MainTex_ST.w);
+ 
     vec2 uv_tex2 = DelayOffsetUV(inuv, _Layer2OffsetX, _Layer2OffsetY);
-    //o.uv1.zw = TRANSFORM_TEX(uv_tex2, _MainTex);
-    vec2 temp2 = uv_tex2 * vec2(_MainTex_ST.x,_MainTex_ST.y) + vec2(_MainTex_ST.z,_MainTex_ST.w);
-    uv1=vec4(temp1,temp2);
-    // layer1 uv offset 
-    vec2 uv_tex3 = DelayOffsetUV(inuv, _Layer3OffsetX, _Layer3OffsetY);
-    //o.uv2.xy = TRANSFORM_TEX(uv_tex3, _MainTex);
-    temp1 = uv_tex3 * vec2(_MainTex_ST.x,_MainTex_ST.y) + vec2(_MainTex_ST.z,_MainTex_ST.w);
-
-
-    //每一层的Mask（透贴）偏移，偏移量与tex一致，并可以用_AlphaDelay微调
-    // mask1 uv offset
-    vec2 uv_mask1 = DelayOffsetUV(inuv, _Layer1OffsetX - _AlphaDelay, _Layer1OffsetY);
-    //o.uv2.zw = TRANSFORM_TEX(uv_mask1, _Mask);
-    temp2 = uv_mask1 * vec2(_Mask_ST.x,_Mask_ST.y) + vec2(_Mask_ST.z,_Mask_ST.w);
-    uv2=vec4(temp1,temp2);
-
-    // mask2 uv offset
-    vec2 uv_mask2 = DelayOffsetUV(inuv, _Layer2OffsetX - _AlphaDelay, _Layer2OffsetY);
-    //o.uv3.xy = TRANSFORM_TEX(uv_mask2, _Mask);
-    temp1=uv_mask2 * vec2(_Mask_ST.x,_Mask_ST.y) + vec2(_Mask_ST.z,_Mask_ST.w);
-    // mask3 uv offset
-    vec2 uv_mask3 = DelayOffsetUV(inuv, _Layer3OffsetX - _AlphaDelay, _Layer3OffsetY);
-    //o.uv3.zw = TRANSFORM_TEX(uv_mask3, _Mask);
-    temp2 = uv_mask3 * vec2(_Mask_ST.x,_Mask_ST.y) + vec2(_Mask_ST.z,_Mask_ST.w);
-    uv3=vec4(temp1,temp2);
+    uv2 = uv_tex2 * vec2(_MainTex_ST.x,_MainTex_ST.y) + vec2(_MainTex_ST.z,_MainTex_ST.w);
     
-    //UNITY_TRANSFER_FOG(o,o.vertex);
-    uv4 = inuv;
+    vec2 uv_tex3 = DelayOffsetUV(inuv, _Layer3OffsetX, _Layer3OffsetY);
+    uv3 = uv_tex3 * vec2(_MainTex_ST.x,_MainTex_ST.y) + vec2(_MainTex_ST.z,_MainTex_ST.w);
+
+
 }
             
