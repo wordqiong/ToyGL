@@ -38,6 +38,13 @@
 
 //foamheaders
 #include <vector>
+
+#include<iostream>
+#include<windows.h>
+#include<Mmsystem.h>
+#pragma comment(lib,"winmm.lib")
+using namespace std;
+
 float currentFrame;
 //foam
 int max_length = 512;
@@ -71,7 +78,7 @@ unsigned int loadTexture(std::vector<std::string> faces);
 unsigned int loadTexture(char const* path);
 void initGL();
 void initWaterPart(Shader* cubeShader,Shader* waterShader,Shader* quadShader);
-void renderwater(Shader* ourShader, Model* fishModel, Shader* shaderBlur,Model_obj* boatModel,Model_obj* indoorModel,Shader* boatShader,  Shader* blendingShader, Shader* skyboxShader,Shader* foamShader, Animator *animator) ;
+void renderwater(Shader* ourShader, Model* fishModel, Shader* shaderBlur,Model_obj* boatModel,Model_obj* indoorModel,Shader* boatShader,  Shader* blendingShader, Shader* skyboxShader,Shader* foamShader, Animator *animator, Model* fishModel_2, Model* fishModel_3) ;
 unsigned int loadTransparentTexture(char const* path);
 glm::vec3 sin_(float angle, float speed, float height);
 void drawBoat();
@@ -507,7 +514,10 @@ int main()
     // -----------
     lastFrame= static_cast<float>(glfwGetTime());
 
-    
+    ///////////////////////////////////Music///////////////////////////////////////////////////////////////////////////////////////////////////
+    PlaySound(TEXT("../Glitter/bgm.wav"), NULL, SND_FILENAME | SND_ASYNC);
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     while (!glfwWindowShouldClose(window))
     {
 
@@ -548,10 +558,10 @@ int main()
         for (int i = 0; i < newparticles; i++) {
             int particleIndex = FindUnusedParticle();
             ParticlesContainer[particleIndex].life = 2.0f; // This particle will live 5 seconds.
-            ParticlesContainer[particleIndex].pos = glm::vec3(0, 2.5f, 0);
+            ParticlesContainer[particleIndex].pos = glm::vec3(0.8f, 6.5f, -0.8);
 
-            float spread = 1.5f;
-            glm::vec3 maindir = glm::vec3(0.0f, 0.1f, 5.0f);
+            float spread = 1.0f;
+            glm::vec3 maindir = glm::vec3(5.0f, 4.0f, 0.0f);
             // Very bad way to generate a random direction; 
             // See for instance http://stackoverflow.com/questions/5408276/python-uniform-spherical-distribution instead,
             // combined with some user-controlled parameters (main direction, spread, etc)
@@ -573,7 +583,6 @@ int main()
             ParticlesContainer[particleIndex].size = (rand() % 1000) / 2000.0f + 0.1f;
 
         }
-
 
 
         // Simulate all particles
@@ -986,7 +995,7 @@ int main()
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glEnable(GL_DEPTH_TEST);
 
-        renderwater(&ourShader, &fishModel, &shaderBlur,&boatModel,&indoorModel,&boatShader,&blendingShader,&skyboxShader,&foamShader,&animator);
+        renderwater(&ourShader, &fishModel, &shaderBlur,&boatModel,&indoorModel,&boatShader,&blendingShader,&skyboxShader,&foamShader,&animator,&fishModel_2,&fishModel_3);
 
        
         glfwPollEvents();
@@ -1153,8 +1162,8 @@ unsigned int loadTexture(std::vector<std::string> faces)
 void initfoam(Shader *foamShader) {
 #define PI 3.1415926535
     //foam
-    float a = 4;
-    float b = 3;
+    float a = 1.2;
+    float b = 0.9;
 
     for (int i = 0; i <= max_length; i++)
     {
@@ -1276,7 +1285,7 @@ void initWaterPart(Shader* cubeShader, Shader* waterShader, Shader* quadShader) 
   //  cube_deco_trans[1] = glm::translate(glm::mat4(1.0f), glm::vec3(-15.0f, 5.0f, 4.0f));
   //  cube_deco_trans[1] = glm::scale(cube_deco_trans[1], glm::vec3(2.5f, 2.5f, 2.5f));
 
-    water_trans = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, 0.0f));
+    water_trans = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 3.0f, 0.0f));
     water_trans = glm::scale(water_trans, glm::vec3(100.0f, 20.0f, 100.0f));
    // water_trans = glm::scale(water_trans, glm::vec3(20.0f, 20.0f, 20.0f));
     glClearColor(0.3f, 0.6f, 1.0f, 1.0f);
@@ -1350,7 +1359,7 @@ unsigned int loadTexture(char const* path)
     return textureID;
 }
 
-void renderwater(Shader* ourShader, Model* fishModel, Shader* shaderBlur, Model_obj* boatModel, Model_obj* indoorModel, Shader* boatShader,Shader* blendingShader,Shader* skyboxShader,Shader* foamShader,Animator* animator ) {
+void renderwater(Shader* ourShader, Model* fishModel, Shader* shaderBlur, Model_obj* boatModel, Model_obj* indoorModel, Shader* boatShader,Shader* blendingShader,Shader* skyboxShader,Shader* foamShader,Animator* animator,Model *fishModel_2,Model *fishModel_3) {
     water.set_effect(water_effect);
     water.SetGussPingPongTexture(pingpongColorbuffers[1]);
     water.SetGussPingPong_2Texture(colorBuffers[0]);
@@ -1386,6 +1395,109 @@ void renderwater(Shader* ourShader, Model* fishModel, Shader* shaderBlur, Model_
         Drawable_list[i]->Draw();
     }
 
+    ourShader->use();
+    initModel(ourShader);
+
+
+    //
+    auto transforms = animator->GetFinalBoneMatrices();
+    for (int i = 0; i < transforms.size(); ++i)
+        ourShader->setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
+    glm::mat4 model = glm::mat4(1.0f);
+    ourShader->setMat4("model", model);
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(0.0f, -5.0f, 0.0f)); // translate it down so it's at the center of the scene       
+    model = glm::scale(model, glm::vec3(.1f, .1f, .1f));	// it's a bit too big for our scene, so scale it down  
+
+    model = glm::translate(model, sin_(glfwGetTime() + 9, 100, 10));
+    model = glm::translate(model, glm::vec3(200.8f, 0.0f, 20.0f));
+    model = glm::translate(model, glm::vec3(-6 * glfwGetTime(), 0.0f, 0.0f));
+    ourShader->setMat4("model", model);
+
+    ourShader->setMat4("view", camera.GetViewMatrix());
+    fishModel->Draw(*ourShader);
+
+    ourShader->setMat4("view", camera.GetViewMatrix());
+    model = glm::translate(model, glm::vec3(50.0f, 0.0f, -20.0f));
+    fishModel->Draw(*ourShader);
+        ourShader->setMat4("view", camera.GetViewMatrix());
+
+    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 40.0f));
+    ourShader->setMat4("model", model);
+    fishModel->Draw(*ourShader);
+
+    glm::mat4 model_2 = glm::mat4(1.0f);
+    model_2 = glm::translate(model_2, glm::vec3(17.5f, -5.0f, 0.0f));
+    model_2 = glm::scale(model_2, glm::vec3(.1f, .1f, .1f));
+    model_2 = glm::translate(model_2, glm::vec3(-3 * glfwGetTime(), 0.0f, 0.0f));
+    model_2 = glm::translate(model_2, sin_(glfwGetTime() + 4, 40, 35));
+    ourShader->setMat4("model", model_2);
+    fishModel_2->Draw(*ourShader);
+
+    glm::mat4 model_7 = glm::mat4(1.0f);
+    model_7 = glm::translate(model_7, glm::vec3(16.0f, -5.0f, 0.0f));
+    model_7 = glm::scale(model_7, glm::vec3(.1f, .1f, .1f));
+    model_7 = glm::translate(model_7, glm::vec3(-3 * glfwGetTime(), 0.0f, -3.0f));
+    model_7 = glm::translate(model_7, sin_(glfwGetTime() + 2, 50, 30));
+    ourShader->setMat4("model", model_7);
+    fishModel_2->Draw(*ourShader);
+
+    glm::mat4 model_8 = glm::mat4(1.0f);
+    model_8 = glm::translate(model_8, glm::vec3(14.0f, -5.0f, 0.0f));
+    model_8 = glm::scale(model_8, glm::vec3(.1f, .1f, .1f));
+    model_8 = glm::translate(model_8, glm::vec3(-3 * glfwGetTime(), 0.0f, -7.0f));
+    model_8 = glm::translate(model_8, sin_(glfwGetTime() + 5, 60, 25));
+    ourShader->setMat4("model", model_8);
+    fishModel_2->Draw(*ourShader);
+
+    glm::mat4 model_9 = glm::mat4(1.0f);
+    model_9 = glm::translate(model_9, glm::vec3(15.5f, -5.0f, 0.0f));
+    model_9 = glm::scale(model_9, glm::vec3(.1f, .1f, .1f));
+    model_9 = glm::translate(model_9, glm::vec3(-3 * glfwGetTime(), 0.0f, -10.0f));
+    model_9 = glm::translate(model_9, sin_(glfwGetTime() + 7, 70, 20));
+    ourShader->setMat4("model", model_9);
+    fishModel_2->Draw(*ourShader);
+
+    glm::mat4 model_10 = glm::mat4(1.0f);
+    model_10 = glm::translate(model_10, glm::vec3(16.8f, -5.0f, -5.0f));
+    model_10 = glm::scale(model_10, glm::vec3(.1f, .1f, .1f));
+    model_10 = glm::translate(model_10, glm::vec3(-3 * glfwGetTime(), 0.0f, 0.0f));
+    model_10 = glm::translate(model_10, sin_(glfwGetTime() + 3, 100, 10));
+    ourShader->setMat4("model", model_10);
+    fishModel_2->Draw(*ourShader);
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    glm::mat4 model_3 = glm::mat4(1.0f);
+    model_3 = model;
+    model_3 = glm::translate(model_3, glm::vec3(150.8f, 0.0f, 20.0f));
+    model_3 = glm::translate(model_3, glm::vec3(-3 * glfwGetTime(), 0.0f, 0.0f));
+    model_3 = glm::translate(model_3, sin_(glfwGetTime() + 3, 100, 40));
+    ourShader->setMat4("model", model_3);
+    fishModel_3->Draw(*ourShader);
+
+    glm::mat4 model_4 = glm::mat4(1.0f);
+    model_4 = model;
+    model_4 = glm::translate(model_4, glm::vec3(150.8f, 0.0f, -40.0f));
+    model_4 = glm::translate(model_4, glm::vec3(-3 * glfwGetTime(), 0.0f, 0.0f));
+    model_4 = glm::translate(model_4, sin_(glfwGetTime() + 6, 60, 30));
+    ourShader->setMat4("model", model_4);
+    fishModel_3->Draw(*ourShader);
+
+    glm::mat4 model_5 = glm::mat4(1.0f);
+    model_5 = model;
+    model_5 = glm::translate(model_5, glm::vec3(200.8f, 0.0f, 10.0f));
+    model_5 = glm::translate(model_5, glm::vec3(-3 * glfwGetTime(), 0.0f, 0.0f));
+    model_5 = glm::translate(model_5, sin_(glfwGetTime() + 10, 70, 35));
+    ourShader->setMat4("model", model_5);
+    fishModel_3->Draw(*ourShader);
+
+    glm::mat4 model_6 = glm::mat4(1.0f);
+    model_6 = model;
+    model_6 = glm::translate(model_6, glm::vec3(175.8f, 0.0f, 20.0f));
+    model_6 = glm::translate(model_6, glm::vec3(-3 * glfwGetTime(), 0.0f, 0.0f));
+    model_6 = glm::translate(model_6, sin_(glfwGetTime() + 10, 80, 45));
+    ourShader->setMat4("model", model_6);
+    fishModel_3->Draw(*ourShader);
 
 
 
@@ -1406,63 +1518,129 @@ void renderwater(Shader* ourShader, Model* fishModel, Shader* shaderBlur, Model_
     //renderQuad();
     //use the different view matrix which is from under the water
     for (size_t i = 0; i < 5; i++) {
-        cube_base[i].SetMVPMat(cube_base_trans[i], camera.GetReflectMatrix(2.0f), projection);
+        cube_base[i].SetMVPMat(cube_base_trans[i], camera.GetReflectMatrix(3.0f), projection);
     }
 
     for (size_t i = 0; i < 2; i++) {
-        cube_decoration[i].SetMVPMat(cube_deco_trans[i], camera.GetReflectMatrix(2), projection);
+        cube_decoration[i].SetMVPMat(cube_deco_trans[i], camera.GetReflectMatrix(3.0f), projection);
     }
 
-    water.SetMVPMat(water_trans, camera.GetReflectMatrix(2), projection);
+    water.SetMVPMat(water_trans, camera.GetReflectMatrix(3), projection);
 
     for (size_t i = 0; i < Drawable_list.size(); i++) {
         Drawable_list[i]->Draw();
     }
     boatShader->use();
     initModel(boatShader);
-    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(baseX, baseY, baseZ)); // translate it down so it's at the center of the scene
     model = glm::scale(model, glm::vec3(5.0f));	// it's a bit too big for our scene, so scale it down
-    boatShader->setMat4("view", camera.GetReflectMatrix(2));
+    boatShader->setMat4("view", camera.GetReflectMatrix(3));
     // model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
     boatShader->setMat4("model", model);
     boatModel->Draw(*boatShader);
 
-
-    ourShader->use();
-    initModel(ourShader);
-
-
-    //
-    auto transforms = animator->GetFinalBoneMatrices();
+    transforms = animator->GetFinalBoneMatrices();
     for (int i = 0; i < transforms.size(); ++i)
         ourShader->setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
-
+    model = glm::mat4(1.0f);
     ourShader->setMat4("model", model);
     model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(0.0f, 5.0f, 0.0f)); // translate it down so it's at the center of the scene       
+    model = glm::translate(model, glm::vec3(0.0f, -5.0f, 0.0f)); // translate it down so it's at the center of the scene       
     model = glm::scale(model, glm::vec3(.1f, .1f, .1f));	// it's a bit too big for our scene, so scale it down  
 
     model = glm::translate(model, sin_(glfwGetTime() + 9, 100, 10));
     model = glm::translate(model, glm::vec3(200.8f, 0.0f, 20.0f));
     model = glm::translate(model, glm::vec3(-6 * glfwGetTime(), 0.0f, 0.0f));
     ourShader->setMat4("model", model);
-    
-    ourShader->setMat4("view", camera.GetReflectMatrix(2));
+
+    ourShader->setMat4("view", camera.GetReflectMatrix(3));
     fishModel->Draw(*ourShader);
 
-    ourShader->setMat4("view", camera.GetReflectMatrix(2));
+    ourShader->setMat4("view", camera.GetReflectMatrix(3));
     model = glm::translate(model, glm::vec3(50.0f, 0.0f, -20.0f));
     fishModel->Draw(*ourShader);
 
-    ourShader->setMat4("view", camera.GetReflectMatrix(2));
+    ourShader->setMat4("view", camera.GetReflectMatrix(3));
 
     model = glm::translate(model, glm::vec3(0.0f, 0.0f, 40.0f));
     ourShader->setMat4("model", model);
     fishModel->Draw(*ourShader);
 
+    model_2 = glm::mat4(1.0f);
+    model_2 = glm::translate(model_2, glm::vec3(17.5f, -5.0f, 0.0f));
+    model_2 = glm::scale(model_2, glm::vec3(.1f, .1f, .1f));
+    model_2 = glm::translate(model_2, glm::vec3(-3 * glfwGetTime(), 0.0f, 0.0f));
+    model_2 = glm::translate(model_2, sin_(glfwGetTime() + 4, 40, 35));
+    ourShader->setMat4("model", model_2);
+    fishModel_2->Draw(*ourShader);
 
+    model_7 = glm::mat4(1.0f);
+    model_7 = glm::translate(model_7, glm::vec3(16.0f, -5.0f, 0.0f));
+    model_7 = glm::scale(model_7, glm::vec3(.1f, .1f, .1f));
+    model_7 = glm::translate(model_7, glm::vec3(-3 * glfwGetTime(), 0.0f, -3.0f));
+    model_7 = glm::translate(model_7, sin_(glfwGetTime() + 2, 50, 30));
+    ourShader->setMat4("model", model_7);
+    fishModel_2->Draw(*ourShader);
 
+    model_8 = glm::mat4(1.0f);
+    model_8 = glm::translate(model_8, glm::vec3(14.0f, -5.0f, 0.0f));
+    model_8 = glm::scale(model_8, glm::vec3(.1f, .1f, .1f));
+    model_8 = glm::translate(model_8, glm::vec3(-3 * glfwGetTime(), 0.0f, -7.0f));
+    model_8 = glm::translate(model_8, sin_(glfwGetTime() + 5, 60, 25));
+    ourShader->setMat4("model", model_8);
+    fishModel_2->Draw(*ourShader);
+
+    model_9 = glm::mat4(1.0f);
+    model_9 = glm::translate(model_9, glm::vec3(15.5f, -5.0f, 0.0f));
+    model_9 = glm::scale(model_9, glm::vec3(.1f, .1f, .1f));
+    model_9 = glm::translate(model_9, glm::vec3(-3 * glfwGetTime(), 0.0f, -10.0f));
+    model_9 = glm::translate(model_9, sin_(glfwGetTime() + 7, 70, 20));
+    ourShader->setMat4("model", model_9);
+    fishModel_2->Draw(*ourShader);
+
+    model_10 = glm::mat4(1.0f);
+    model_10 = glm::translate(model_10, glm::vec3(16.8f, -5.0f, -5.0f));
+    model_10 = glm::scale(model_10, glm::vec3(.1f, .1f, .1f));
+    model_10 = glm::translate(model_10, glm::vec3(-3 * glfwGetTime(), 0.0f, 0.0f));
+    model_10 = glm::translate(model_10, sin_(glfwGetTime() + 3, 100, 10));
+    ourShader->setMat4("model", model_10);
+    fishModel_2->Draw(*ourShader);
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    model_3 = glm::mat4(1.0f);
+    model_3 = model;
+    model_3 = glm::translate(model_3, glm::vec3(150.8f, 0.0f, 20.0f));
+    model_3 = glm::translate(model_3, glm::vec3(-3 * glfwGetTime(), 0.0f, 0.0f));
+    model_3 = glm::translate(model_3, sin_(glfwGetTime() + 3, 100, 40));
+    ourShader->setMat4("model", model_3);
+    fishModel_3->Draw(*ourShader);
+
+    model_4 = glm::mat4(1.0f);
+    model_4 = model;
+    model_4 = glm::translate(model_4, glm::vec3(150.8f, 0.0f, -40.0f));
+    model_4 = glm::translate(model_4, glm::vec3(-3 * glfwGetTime(), 0.0f, 0.0f));
+    model_4 = glm::translate(model_4, sin_(glfwGetTime() + 6, 60, 30));
+    ourShader->setMat4("model", model_4);
+    fishModel_3->Draw(*ourShader);
+
+    model_5 = glm::mat4(1.0f);
+    model_5 = model;
+    model_5 = glm::translate(model_5, glm::vec3(200.8f, 0.0f, 10.0f));
+    model_5 = glm::translate(model_5, glm::vec3(-3 * glfwGetTime(), 0.0f, 0.0f));
+    model_5 = glm::translate(model_5, sin_(glfwGetTime() + 10, 70, 35));
+    ourShader->setMat4("model", model_5);
+    fishModel_3->Draw(*ourShader);
+
+    model_6 = glm::mat4(1.0f);
+    model_6 = model;
+    model_6 = glm::translate(model_6, glm::vec3(175.8f, 0.0f, 20.0f));
+    model_6 = glm::translate(model_6, glm::vec3(-3 * glfwGetTime(), 0.0f, 0.0f));
+    model_6 = glm::translate(model_6, sin_(glfwGetTime() + 10, 80, 45));
+    ourShader->setMat4("model", model_6);
+    fishModel_3->Draw(*ourShader);
+
+   
     glDisable(GL_CLIP_DISTANCE0);
     framebuffer_reflection->unbind();
 
